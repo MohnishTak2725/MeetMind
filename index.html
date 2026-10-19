@@ -1,0 +1,2794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MeetMind — AI Meeting Assistant</title>
+  <meta name="description" content="Real-time AI-powered meeting assistant. Listens to your Microsoft Teams meetings and generates intelligent answers instantly." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-base: #0a0d14;
+      --bg-surface: #111520;
+      --bg-card: #161c2e;
+      --bg-glass: rgba(22, 28, 46, 0.7);
+      --border: rgba(99, 120, 255, 0.12);
+      --border-active: rgba(99, 120, 255, 0.45);
+      --accent-blue: #6378ff;
+      --accent-purple: #a855f7;
+      --accent-cyan: #22d3ee;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --text-primary: #e8eaf6;
+      --text-secondary: #8892b0;
+      --text-muted: #4a5568;
+      --glow-blue: rgba(99, 120, 255, 0.25);
+      --glow-purple: rgba(168, 85, 247, 0.2);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+
+    .bg-orbs {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: 0.18;
+      animation: orb-float 12s ease-in-out infinite alternate;
+    }
+    .orb-1 { width: 420px; height: 420px; background: var(--accent-blue); top: -120px; left: -80px; animation-delay: 0s; }
+    .orb-2 { width: 320px; height: 320px; background: var(--accent-purple); bottom: -80px; right: -60px; animation-delay: -4s; }
+    .orb-3 { width: 200px; height: 200px; background: var(--accent-cyan); top: 40%; right: 20%; animation-delay: -8s; }
+    @keyframes orb-float {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(20px, 30px) scale(1.08); }
+    }
+
+    .app {
+      position: relative; z-index: 1;
+      display: grid; grid-template-rows: auto 1fr;
+      height: 100vh;
+      max-width: 1400px; margin: 0 auto;
+      padding: 0 16px 16px;
+    }
+
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 20px var(--glow-blue);
+    }
+    .logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo-text span { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    .status-badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      font-size: 12px; font-weight: 500;
+      color: var(--text-secondary);
+      transition: var(--transition);
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--text-muted);
+      transition: var(--transition);
+    }
+    .status-badge.listening .status-dot { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); animation: pulse-dot 1.5s infinite; }
+    .status-badge.listening { border-color: rgba(16, 185, 129, 0.3); color: var(--accent-green); }
+    .status-badge.processing .status-dot { background: var(--accent-amber); box-shadow: 0 0 8px var(--accent-amber); }
+    .status-badge.processing { border-color: rgba(245, 158, 11, 0.3); color: var(--accent-amber); }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .btn-icon {
+      width: 36px; height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text-secondary);
+      transition: var(--transition); font-size: 16px;
+    }
+    .btn-icon:hover { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(99,120,255,0.08); }
+
+    .btn-pip {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, rgba(99, 120, 255, 0.2), rgba(168, 85, 247, 0.2));
+      border: 1px solid rgba(99, 120, 255, 0.45);
+      color: #e0e7ff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn-pip:hover {
+      background: linear-gradient(135deg, rgba(99, 120, 255, 0.35), rgba(168, 85, 247, 0.35));
+      border-color: var(--accent-blue);
+      color: #fff;
+      box-shadow: 0 0 16px rgba(99, 120, 255, 0.4);
+      transform: translateY(-1px);
+    }
+    .btn-pip.active {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: rgba(16, 185, 129, 0.6);
+      color: #34d399;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+    }
+
+    body.ghost-mode .app {
+      background: rgba(10, 13, 20, 0.72) !important;
+      backdrop-filter: blur(8px) !important;
+    }
+    body.ghost-mode .panel {
+      background: rgba(15, 20, 32, 0.65) !important;
+    }
+    body.ghost-mode .bg-orbs {
+      opacity: 0.15;
+    }
+
+    .stealth-modal {
+      position: fixed; inset: 0;
+      background: rgba(10, 13, 20, 0.88);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 600; padding: 20px;
+    }
+    .stealth-modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-active);
+      border-radius: var(--radius);
+      max-width: 620px; width: 100%;
+      padding: 26px; box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      max-height: 90vh; overflow-y: auto;
+    }
+    .stealth-step {
+      display: flex; gap: 14px; margin-bottom: 14px;
+      background: var(--bg-surface); padding: 14px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .stealth-step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0;
+    }
+    .stealth-step-content { flex: 1; font-size: 12.5px; line-height: 1.6; }
+    .stealth-step-title { font-weight: 600; color: #fff; margin-bottom: 4px; font-size: 13.5px; }
+
+    .settings-panel {
+      position: fixed; top: 66px; right: 16px;
+      width: 340px;
+      background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; z-index: 100;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      display: none;
+      animation: slide-down 0.2s ease;
+    }
+    .settings-panel.open { display: block; }
+    @keyframes slide-down {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .settings-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; }
+
+    .field-group { margin-bottom: 14px; }
+    .field-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+    .field-input {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      font-size: 13px; font-family: 'JetBrains Mono', monospace;
+      color: var(--text-primary); outline: none;
+      transition: var(--transition);
+    }
+    .field-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px var(--glow-blue); }
+    .field-input::placeholder { color: var(--text-muted); }
+
+    .field-select {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      font-size: 13px; font-family: 'Inter', sans-serif;
+      color: var(--text-primary); outline: none; cursor: pointer;
+      transition: var(--transition);
+    }
+    .field-select:focus { border-color: var(--accent-blue); }
+    .field-select option { background: var(--bg-card); }
+
+    .btn-save {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border: none; border-radius: var(--radius-sm);
+      padding: 10px; color: #fff;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: var(--transition); margin-top: 6px;
+    }
+    .btn-save:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-save:active { transform: translateY(0); }
+
+    .btn-secondary {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      background: rgba(99,120,255,0.08);
+    }
+
+    .file-warning-banner {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.15));
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: var(--radius-sm);
+      color: #fde68a;
+      padding: 10px 14px;
+      margin-top: 10px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .file-banner-text { line-height: 1.5; }
+    .btn-banner {
+      background: var(--accent-amber);
+      color: #000;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 11px;
+      white-space: nowrap;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-banner:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .mic-status-pill {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      margin-left: 6px;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .mic-status-pill.active {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+    }
+    .mic-status-pill.silent {
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.1);
+      color: #fbbf24;
+    }
+    .mic-status-pill.error {
+      border-color: rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+    }
+    .btn-teams-audio {
+      background: rgba(99, 120, 255, 0.15);
+      border: 1px solid rgba(99, 120, 255, 0.4);
+      border-radius: var(--radius-sm);
+      color: #93c5fd;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: var(--transition);
+    }
+    .btn-teams-audio:hover {
+      background: rgba(99, 120, 255, 0.28);
+      border-color: #6378ff;
+      color: #fff;
+    }
+    .btn-teams-audio.active {
+      background: rgba(16, 185, 129, 0.22);
+      border-color: rgba(16, 185, 129, 0.6);
+      color: #34d399;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+    .teams-audio-pill {
+      font-size: 10.5px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      margin-left: 6px;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .teams-audio-pill.active {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+    }
+    .teams-audio-pill.speaking {
+      border-color: rgba(245, 158, 11, 0.5);
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      animation: pulse-speaking 1s infinite;
+    }
+    .teams-audio-pill.processing {
+      border-color: rgba(168, 85, 247, 0.5);
+      background: rgba(168, 85, 247, 0.2);
+      color: #c084fc;
+    }
+    @keyframes pulse-speaking {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.04); }
+    }
+    .teams-btn {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 2px solid var(--border); background: var(--bg-surface);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 19px; transition: var(--transition);
+      position: relative; flex-shrink: 0;
+    }
+    .teams-btn:hover { border-color: var(--accent-blue); background: rgba(99,120,255,0.1); }
+    .teams-btn.active {
+      border-color: var(--accent-green);
+      background: rgba(16, 185, 129, 0.18);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+    }
+    .jargon-pill {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--accent-emerald);
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .jargon-pill:hover {
+      background: rgba(16, 185, 129, 0.22);
+      border-color: rgba(16, 185, 129, 0.5);
+    }
+
+    .diag-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 3px;
+    }
+    .diag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      display: inline-block;
+      flex-shrink: 0;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .diag-dot.live { background: #34d399; box-shadow: 0 0 6px rgba(52, 211, 153, 0.6); }
+    .diag-dot.warn { background: #fbbf24; box-shadow: 0 0 6px rgba(251, 191, 36, 0.6); }
+    .diag-dot.error { background: #f87171; box-shadow: 0 0 6px rgba(248, 113, 113, 0.6); }
+
+    .preset-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .preset-chip {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+      user-select: none;
+    }
+    .preset-chip:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      background: rgba(99,120,255,0.08);
+    }
+
+    .content {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 14px; overflow: hidden; padding-top: 14px;
+    }
+
+    .panel {
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      display: flex; flex-direction: column; overflow: hidden;
+      transition: border-color var(--transition);
+    }
+    .panel:hover { border-color: var(--border-active); }
+
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .panel-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.3px; }
+    .panel-title-icon { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .icon-mic { background: rgba(99, 120, 255, 0.15); }
+    .icon-ai  { background: rgba(168, 85, 247, 0.15); }
+
+    .panel-actions { display: flex; gap: 6px; }
+
+    .btn-sm {
+      padding: 5px 10px; border-radius: 6px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      border: 1px solid var(--border); background: var(--bg-surface);
+      color: var(--text-secondary); transition: var(--transition); white-space: nowrap;
+    }
+    .btn-sm:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+    .btn-sm.danger:hover { border-color: var(--accent-red); color: var(--accent-red); }
+
+    .panel-body {
+      flex: 1; overflow-y: auto; padding: 14px 16px; scroll-behavior: smooth;
+    }
+    .panel-body::-webkit-scrollbar { width: 4px; }
+    .panel-body::-webkit-scrollbar-track { background: transparent; }
+    .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    .mic-control {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border); flex-shrink: 0;
+    }
+
+    .mic-btn {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 2px solid var(--border); background: var(--bg-surface);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; transition: var(--transition);
+      position: relative; flex-shrink: 0;
+    }
+    .mic-btn::before {
+      content: ''; position: absolute; inset: -4px;
+      border-radius: 50%; border: 2px solid transparent;
+      transition: var(--transition);
+    }
+    .mic-btn:hover { border-color: var(--accent-blue); background: rgba(99,120,255,0.1); }
+    .mic-btn.active {
+      border-color: var(--accent-red);
+      background: rgba(239, 68, 68, 0.1);
+      animation: mic-pulse 2s ease-in-out infinite;
+    }
+    .mic-btn.active::before { border-color: rgba(239, 68, 68, 0.3); animation: mic-ring 2s ease-in-out infinite; }
+    @keyframes mic-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+      50%       { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
+    }
+    @keyframes mic-ring {
+      0%   { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    .mic-info { flex: 1; }
+    .mic-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .mic-sublabel { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .waveform { display: flex; align-items: center; gap: 2px; height: 28px; overflow: hidden; }
+    .wave-bar {
+      width: 3px; border-radius: 99px;
+      background: linear-gradient(to top, var(--accent-blue), var(--accent-purple));
+      transition: height 0.1s ease; opacity: 0.5;
+    }
+    .waveform.active .wave-bar { opacity: 1; animation: wave-anim 0.6s ease-in-out infinite alternate; }
+    .wave-bar:nth-child(1) { height: 8px;  animation-delay: 0s; }
+    .wave-bar:nth-child(2) { height: 14px; animation-delay: 0.08s; }
+    .wave-bar:nth-child(3) { height: 22px; animation-delay: 0.16s; }
+    .wave-bar:nth-child(4) { height: 18px; animation-delay: 0.24s; }
+    .wave-bar:nth-child(5) { height: 26px; animation-delay: 0.32s; }
+    .wave-bar:nth-child(6) { height: 14px; animation-delay: 0.4s; }
+    .wave-bar:nth-child(7) { height: 8px;  animation-delay: 0.48s; }
+    @keyframes wave-anim {
+      from { transform: scaleY(0.4); }
+      to   { transform: scaleY(1); }
+    }
+
+    .transcript-empty, .answer-empty {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100%; gap: 12px; color: var(--text-muted); text-align: center;
+    }
+    .transcript-empty-icon, .answer-empty-icon { font-size: 36px; opacity: 0.4; }
+    .transcript-empty p, .answer-empty p { font-size: 13px; line-height: 1.6; max-width: 220px; }
+
+    .transcript-segment {
+      margin-bottom: 14px; padding: 10px 12px;
+      background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 13px; line-height: 1.65; color: var(--text-primary);
+      position: relative; animation: fade-in-up 0.3s ease; transition: border-color var(--transition);
+    }
+    .transcript-segment:hover { border-color: var(--border-active); }
+    .transcript-segment.question { border-color: rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.04); }
+    .transcript-segment.question::after {
+      content: '?'; position: absolute; top: 8px; right: 10px;
+      font-size: 11px; font-weight: 700; color: var(--accent-amber);
+    }
+    .segment-time { font-size: 10px; color: var(--text-muted); margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
+
+    .transcript-interim {
+      margin-bottom: 14px; padding: 10px 12px;
+      border: 1px dashed rgba(99, 120, 255, 0.3); border-radius: var(--radius-sm);
+      font-size: 13px; line-height: 1.65; color: var(--text-secondary); font-style: italic;
+      animation: blink-border 1.5s infinite;
+    }
+    @keyframes blink-border {
+      0%, 100% { border-color: rgba(99,120,255,0.3); }
+      50%       { border-color: rgba(99,120,255,0.7); }
+    }
+
+    @keyframes fade-in-up {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .answer-card {
+      margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      overflow: hidden; animation: fade-in-up 0.3s ease; transition: border-color var(--transition);
+    }
+    .answer-card:hover { border-color: rgba(168, 85, 247, 0.4); }
+
+    .answer-card-header {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 10px 12px 8px;
+      background: rgba(168, 85, 247, 0.05);
+      border-bottom: 1px solid var(--border);
+    }
+    .answer-q-icon {
+      width: 20px; height: 20px; border-radius: 5px;
+      background: rgba(245,158,11,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; flex-shrink: 0; margin-top: 1px;
+    }
+    .answer-question { font-size: 12px; font-weight: 500; color: var(--accent-amber); line-height: 1.5; flex: 1; }
+
+    .answer-card-body { padding: 12px; }
+    .answer-text { font-size: 13px; line-height: 1.7; color: var(--text-primary); }
+
+    .code-block {
+      margin: 10px 0;
+      border-radius: var(--radius-sm);
+      background: rgba(10, 14, 26, 0.95);
+      border: 1px solid rgba(99, 120, 255, 0.25);
+      overflow: hidden;
+      font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      background: rgba(99, 120, 255, 0.08);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 11px;
+    }
+    .code-lang {
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+    }
+    .btn-copy-code {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 10px;
+      padding: 2px 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .btn-copy-code:hover {
+      background: rgba(99, 120, 255, 0.25);
+      color: #fff;
+      border-color: rgba(99, 120, 255, 0.4);
+    }
+    .code-content {
+      margin: 0;
+      padding: 12px;
+      overflow-x: auto;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: #e2e8f0;
+      background: transparent;
+      white-space: pre;
+    }
+    .code-content code {
+      font-family: inherit;
+    }
+    .inline-code {
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 12px;
+      background: rgba(99, 120, 255, 0.12);
+      border: 1px solid rgba(99, 120, 255, 0.2);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: #93c5fd;
+    }
+    .answer-list {
+      margin: 6px 0;
+      padding-left: 20px;
+    }
+    .answer-list li {
+      margin-bottom: 4px;
+    }
+
+    .answer-card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; border-top: 1px solid var(--border); background: var(--bg-surface);
+    }
+    .answer-time { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+    .btn-copy {
+      font-size: 11px; color: var(--text-secondary); background: none; border: none;
+      cursor: pointer; display: flex; align-items: center; gap: 4px;
+      padding: 3px 6px; border-radius: 4px; transition: var(--transition);
+    }
+    .btn-copy:hover { background: rgba(99,120,255,0.1); color: var(--accent-blue); }
+
+    .answer-loading {
+      margin-bottom: 16px; padding: 16px;
+      border: 1px solid rgba(168,85,247,0.2); border-radius: var(--radius-sm);
+      animation: fade-in-up 0.3s ease;
+    }
+    .shimmer-line {
+      height: 12px; border-radius: 6px;
+      background: linear-gradient(90deg, var(--bg-surface) 25%, rgba(99,120,255,0.1) 50%, var(--bg-surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite; margin-bottom: 8px;
+    }
+    .shimmer-line:last-child { width: 65%; margin-bottom: 0; }
+    @keyframes shimmer {
+      from { background-position: 200% 0; }
+      to   { background-position: -200% 0; }
+    }
+
+    .manual-bar {
+      display: flex; gap: 8px;
+      padding: 10px 16px; border-top: 1px solid var(--border);
+      flex-shrink: 0; background: var(--bg-glass);
+    }
+    .manual-input {
+      flex: 1; background: var(--bg-surface);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 9px 12px; font-size: 13px; font-family: 'Inter', sans-serif;
+      color: var(--text-primary); outline: none; transition: var(--transition);
+    }
+    .manual-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px var(--glow-purple); }
+    .manual-input::placeholder { color: var(--text-muted); }
+
+    .btn-ask {
+      padding: 9px 16px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border: none; border-radius: var(--radius-sm);
+      color: #fff; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: var(--transition); white-space: nowrap;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .btn-ask:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 4px 16px var(--glow-blue); }
+    .btn-ask:active { transform: translateY(0); }
+    .btn-ask:disabled { opacity: 0.45; pointer-events: none; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 18px;
+      font-size: 13px; color: var(--text-primary);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      opacity: 0; transition: all 0.3s ease; pointer-events: none;
+      z-index: 999; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(16,185,129,0.4); }
+    .toast.error   { border-color: rgba(239,68,68,0.4); }
+
+    .api-prompt {
+      position: fixed; inset: 0;
+      background: rgba(10, 13, 20, 0.92);
+      backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 500;
+    }
+    .api-prompt-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-active); border-radius: var(--radius);
+      padding: 32px; width: 420px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      animation: slide-down 0.3s ease;
+    }
+    .api-prompt-icon { font-size: 40px; margin-bottom: 16px; }
+    .api-prompt-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .api-prompt-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px; }
+    .api-prompt-desc a { color: var(--accent-blue); text-decoration: none; }
+    .api-prompt-desc a:hover { text-decoration: underline; }
+
+    * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  </style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- API Key Prompt -->
+<div class="api-prompt" id="apiPrompt">
+  <div class="api-prompt-card">
+    <div class="api-prompt-icon">🧠</div>
+    <div class="api-prompt-title">Welcome to MeetMind</div>
+    <div class="api-prompt-desc">
+      Your real-time AI meeting assistant. Paste your Gemini API key to get started — it's stored locally and never sent anywhere except Google's API.<br/><br/>
+      <a href="https://aistudio.google.com/app/apikey" target="_blank">→ Get your free API key from Google AI Studio</a>
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="apiKeyPromptInput">Gemini API Key</label>
+      <input type="password" class="field-input" id="apiKeyPromptInput" placeholder="AIzaSy..." autocomplete="off" />
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="modelSelectPrompt">Gemini Model</label>
+      <select class="field-select" id="modelSelectPrompt">
+        <option value="gemini-3.8-flash">Gemini 3.8 Flash (Recommended — Fast)</option>
+        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Most capable)</option>
+        <option value="gemini-3.8-pro">Gemini 3.8 Pro (Advanced)</option>
+      </select>
+    </div>
+    <button class="btn-save" onclick="saveApiKeyPrompt()">Launch MeetMind ✨</button>
+  </div>
+</div>
+
+<!-- Main App -->
+<div class="app" id="mainApp" style="display:none;">
+
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      <div class="logo-text">Meet<span>Mind</span></div>
+    </div>
+    <div class="header-right">
+      <button class="btn-pip" id="pipBtn" title="Pop out Always-On-Top floating HUD over Teams/Zoom/Meet" onclick="togglePipHUD()">
+        📌 Pop Out HUD (Always On Top)
+      </button>
+      <div class="status-badge" id="statusBadge">
+        <div class="status-dot"></div>
+        <span id="statusText">Ready</span>
+      </div>
+      <div class="btn-icon" id="ghostToggle" title="Toggle Ghost Transparency (70% Opacity)" onclick="toggleGhostMode()">👻</div>
+      <div class="btn-icon" id="stealthGuideToggle" title="Screen-Sharing Stealth Guide (Teams, Zoom, Meet)" onclick="toggleStealthModal()">👁️</div>
+      <div class="btn-icon" id="settingsToggle" title="Settings" onclick="toggleSettings()">⚙️</div>
+    </div>
+  </header>
+
+  <!-- Settings Panel -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-title">Configuration</div>
+    <div class="field-group">
+      <label class="field-label" for="apiKeyInput">Gemini API Key</label>
+      <input type="password" class="field-input" id="apiKeyInput" placeholder="AIzaSy..." autocomplete="off" />
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="modelSelect">Model</label>
+      <select class="field-select" id="modelSelect">
+        <option value="gemini-3.8-flash">Gemini 3.8 Flash (Fast)</option>
+        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Most capable)</option>
+        <option value="gemini-3.8-pro">Gemini 3.8 Pro (Advanced)</option>
+      </select>
+      <button type="button" class="btn-secondary" onclick="testAndRefreshModels()">🔄 Test Key &amp; Fetch Live Models</button>
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="langSelect">Speech Language</label>
+      <select class="field-select" id="langSelect">
+        <option value="en-US">English (US)</option>
+        <option value="en-GB">English (UK)</option>
+        <option value="en-IN">English (India)</option>
+        <option value="hi-IN">Hindi</option>
+        <option value="es-ES">Spanish</option>
+        <option value="fr-FR">French</option>
+        <option value="de-DE">German</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="contextInput">Meeting / Interview Context</label>
+      <input type="text" class="field-input" id="contextInput" placeholder="e.g. Salesforce Developer, Full-Stack..." />
+      <div class="preset-chips">
+        <span class="preset-chip" onclick="setContextPreset('Salesforce Developer Interview (SOQL, Apex, LWC, Triggers, Flows)')">⚡ Salesforce (SOQL/Apex)</span>
+        <span class="preset-chip" onclick="setContextPreset('Full-Stack Web Engineering (REST APIs, React, Node, Databases)')">🌐 Full-Stack / Web</span>
+        <span class="preset-chip" onclick="setContextPreset('Cloud, DevOps & Microservices (AWS, Kubernetes, CI/CD)')">☁️ Cloud / DevOps</span>
+        <span class="preset-chip" onclick="setContextPreset('System Design & Database Architecture (SQL, NoSQL, Caching)')">📊 System Design</span>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>✨ Phonetic Jargon Auto-Fixer</span>
+        <span style="font-size:11px; color:var(--accent-emerald); font-weight:600;">Active</span>
+      </label>
+      <div style="font-size:11.5px; color:var(--text-muted); margin-bottom:8px; line-height:1.4;">
+        Automatically converts misheard speech: <code>circular</code> → <b>SOQL</b>, <code>epic</code> → <b>Apex</b>, <code>sauce l</code> → <b>SOSL</b>, <code>cuban 80s</code> → <b>Kubernetes</b>.
+      </div>
+      <label class="field-label" for="customJargonInput">Custom Vocabulary Mappings (Optional)</label>
+      <input type="text" class="field-input" id="customJargonInput" placeholder="e.g. cp queue => CPQ, so kill => SOQL" />
+    </div>
+    <button class="btn-save" onclick="saveSettings()">Save Settings</button>
+  </div>
+
+  <!-- Stealth Screen-Sharing Guide Modal -->
+  <div class="stealth-modal" id="stealthModal" style="display:none;" onclick="if(event.target===this)toggleStealthModal()">
+    <div class="stealth-modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="font-size:17px; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px;">
+          <span>👁️ Invisible Screen-Sharing &amp; Overlay Guide</span>
+        </div>
+        <button class="btn-icon" onclick="toggleStealthModal()">✕</button>
+      </div>
+      <p style="font-size:12.5px; color:var(--text-secondary); line-height:1.6; margin-bottom:18px;">
+        Follow these steps to keep MeetMind floating on your screen while staying <strong>100% invisible</strong> to interviewers on Microsoft Teams, Zoom, and Google Meet.
+      </p>
+
+      <div class="stealth-step">
+        <div class="stealth-step-num">1</div>
+        <div class="stealth-step-content">
+          <div class="stealth-step-title">Click "📌 Pop Out HUD (Always On Top)"</div>
+          <div>Opens an ultra-lightweight floating teleprompter window that stays <strong>Always On Top</strong> of Teams, Zoom, VS Code, and browser tabs. Drag it right below your laptop webcam so you look directly into the camera while reading answers.</div>
+        </div>
+      </div>
+
+      <div class="stealth-step">
+        <div class="stealth-step-num">2</div>
+        <div class="stealth-step-content">
+          <div class="stealth-step-title">When Sharing Screen: Select "WINDOW" or "TAB" (Never "Entire Screen")</div>
+          <div>
+            When the interviewer asks you to share your screen:<br/>
+            • <strong>Teams</strong>: Click <em>Share</em> → Choose <strong>Window</strong> (select your Code Editor or Browser test).<br/>
+            • <strong>Zoom</strong>: Click <em>Share Screen</em> → Select your specific browser/IDE window.<br/>
+            • <strong>Google Meet</strong>: Click <em>Present now</em> → Select <strong>"A window"</strong>.<br/>
+            <span style="color:var(--accent-emerald); font-weight:600;">Why it works:</span> Meeting apps encode <em>only</em> the selected application window. The floating PiP HUD is an independent window surface, so it is <strong>100% excluded and completely invisible</strong> to everyone on the call!
+          </div>
+        </div>
+      </div>
+
+      <div class="stealth-step">
+        <div class="stealth-step-num">3</div>
+        <div class="stealth-step-content">
+          <div class="stealth-step-title">Ghost Mode (Transparency) &amp; Focus Presidency</div>
+          <div>
+            Inside the HUD, use the <strong>Opacity</strong> dropdown (e.g. 75% or 60%) to make it semi-transparent so you can see your meeting or code right through it. You can click and type directly inside Teams, HackerRank, or VS Code — the meeting retains full focus while the HUD floats on top.
+          </div>
+        </div>
+      </div>
+
+      <div class="stealth-step" style="border-color: rgba(99, 120, 255, 0.35); background: rgba(99, 120, 255, 0.05);">
+        <div class="stealth-step-num" style="background: var(--accent-purple);">★</div>
+        <div class="stealth-step-content">
+          <div class="stealth-step-title" style="color: #c7d2fe;">Advanced: Forced "Entire Screen" Sharing</div>
+          <div>
+            If an interviewer insists you share your <strong>Entire Desktop</strong>, open the project folder and double-click <code class="inline-code">stealth-mode.bat</code>.<br/>
+            This launches the <strong>Native Stealth HUD</strong> with Windows OS-level <code class="inline-code">WDA_EXCLUDEFROMCAPTURE</code>, making it 100% invisible on any desktop capture or screen share!
+          </div>
+        </div>
+      </div>
+
+      <div class="stealth-step" style="border-color: rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.05);">
+        <div class="stealth-step-num" style="background: var(--accent-green);">🔊</div>
+        <div class="stealth-step-content">
+          <div class="stealth-step-title" style="color: #6ee7b7;">Capturing the Interviewer's Voice (Teams / Zoom / Meet)</div>
+          <div>
+            Standard laptop microphones only hear <em>your</em> voice and cancel out laptop speakers. To hear the <strong>interviewer</strong>:<br/>
+            1. Click <strong>"🔊 Capture Teams Audio"</strong>.<br/>
+            2. In the Chrome prompt, select <strong>"Entire Screen"</strong>.<br/>
+            3. Make sure the toggle <strong>"Also share system audio"</strong> is checked at the bottom!<br/>
+            4. Click Share. MeetMind now intercepts the clean digital audio from Teams (even with headphones!) and feeds it directly to Gemini for instant question detection &amp; answering.
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-save" style="margin-top:10px;" onclick="toggleStealthModal()">Got It! Close Guide ✓</button>
+    </div>
+  </div>
+
+  <div class="file-warning-banner" id="fileProtocolBanner" style="display:none;">
+    <div class="file-banner-text">
+      <strong>⚠️ Opened as local file (file://):</strong> Chrome disables speech recognition on local files. Please open via the local server:
+    </div>
+    <a href="http://localhost:3000" id="fileBannerLink" class="btn-banner">Switch to http://localhost:3000 →</a>
+  </div>
+
+  <div class="content">
+
+    <!-- LEFT: Transcript -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="panel-title-icon icon-mic">🎙️</div>
+          Live Transcript
+          <span class="mic-status-pill" id="micStatusPill">Mic: Idle</span>
+          <span class="teams-audio-pill" id="teamsAudioPill">Meeting Audio: Idle</span>
+          <span class="jargon-pill" title="Phonetic Jargon Auto-Fixer active: 'circular' is replaced with 'SOQL', 'epic' with 'Apex', etc. Click to configure." onclick="toggleSettings()">✨ Jargon Fixer ON</span>
+        </div>
+        <div class="panel-actions">
+          <button class="btn-teams-audio" id="teamsAudioBtn" title="Capture system audio from Teams, Zoom, Google Meet, Webex, or browser calls even while wearing headphones" onclick="toggleMeetingAudioCapture()">🔊 Capture Meeting Audio (Teams/Zoom/Meet)</button>
+          <button class="btn-sm" title="Simulate a spoken interview question aloud through speakers to test audio capture" onclick="simulateVoiceInterviewer()">🗣️ Test Voice</button>
+          <button class="btn-sm" title="Test if your microphone is working and hearing sound" onclick="testMicVolume()">🎙️ Test Mic</button>
+          <button class="btn-sm" title="Simulate a sample meeting question" onclick="simulateDemoQuestion()">🧪 Test Demo</button>
+          <button class="btn-sm" onclick="copyTranscript()">📋 Copy</button>
+          <button class="btn-sm danger" onclick="clearTranscript()">✕ Clear</button>
+        </div>
+      </div>
+
+      <div class="panel-body" id="transcriptBody">
+        <div class="transcript-empty" id="transcriptEmpty">
+          <div class="transcript-empty-icon">🎤</div>
+          <p>Click your microphone or <strong>Capture Meeting Audio</strong> to listen to Teams, Zoom, or Google Meet</p>
+        </div>
+      </div>
+
+      <div class="mic-control">
+        <button class="mic-btn" id="micBtn" title="Toggle Your Microphone" onclick="toggleListening()">🎤</button>
+        <button class="teams-btn" id="teamsBtnControl" title="Capture Teams, Zoom, Google Meet or System Audio" onclick="toggleMeetingAudioCapture()">🔊</button>
+        <div class="mic-info">
+          <div class="mic-label" id="micLabel">Click to start listening (Mic or Meeting Audio)</div>
+          <div class="mic-sublabel" id="micSublabel">🎤 Mic = Your Voice | 🔊 Meeting Audio = Interviewer Voice (Teams/Zoom/Meet)</div>
+          <div class="diag-line" id="diagLine">
+            <span class="diag-dot" id="diagDot"></span>
+            <span id="diagText">Ready</span>
+          </div>
+        </div>
+        <div class="waveform" id="waveform">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: AI Answers -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="panel-title-icon icon-ai">✨</div>
+          AI Answers
+        </div>
+        <div class="panel-actions">
+          <button class="btn-sm danger" onclick="clearAnswers()">✕ Clear</button>
+        </div>
+      </div>
+
+      <div class="panel-body" id="answersBody">
+        <div class="answer-empty" id="answersEmpty">
+          <div class="answer-empty-icon">💡</div>
+          <p>Detected questions will be answered here automatically by Gemini</p>
+        </div>
+      </div>
+
+      <div class="manual-bar">
+        <input
+          type="text"
+          class="manual-input"
+          id="manualInput"
+          placeholder="Type a question manually and press Enter..."
+          onkeydown="if(event.key==='Enter') askManual()"
+        />
+        <button class="btn-ask" id="askBtn" onclick="askManual()">✨ Ask</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let apiKey = '';
+  let selectedModel = 'gemini-3.8-flash';
+  let recognition = null;
+  let isListening = false;
+  let interimEl = null;
+  let transcriptSegments = [];
+  let questionBuffer = '';
+  let questionTimer = null;
+  let sessionContext = '';
+  let pendingQuestions = new Set();
+
+  // Map old/deprecated model names to current equivalents
+  const MODEL_MIGRATION = {
+    'gemini-2.0-flash': 'gemini-3.8-flash',
+    'gemini-2.5-flash': 'gemini-3.8-flash',
+    'gemini-1.5-flash': 'gemini-3.8-flash',
+    'gemini-1.5-pro':   'gemini-2.5-pro',
+  };
+
+  let dynamicFallbackModels = ['gemini-3.8-flash', 'gemini-2.5-pro', 'gemini-3.8-pro'];
+
+  window.addEventListener('DOMContentLoaded', () => {
+    // Check if API key is provided via query parameter (e.g. from file:// migration link)
+    const urlParams = new URLSearchParams(window.location.search);
+    const keyParam = urlParams.get('key');
+    if (keyParam) {
+      localStorage.setItem('meetmind_apikey', keyParam);
+      try { window.history.replaceState({}, document.title, window.location.pathname); } catch(e) {}
+    }
+
+    const stored = localStorage.getItem('meetmind_apikey');
+    if (stored) {
+      apiKey = stored;
+      let storedModel = localStorage.getItem('meetmind_model') || 'gemini-3.8-flash';
+      // Auto-migrate deprecated model names
+      if (MODEL_MIGRATION[storedModel]) {
+        storedModel = MODEL_MIGRATION[storedModel];
+        localStorage.setItem('meetmind_model', storedModel);
+      }
+      selectedModel = storedModel;
+      sessionContext = localStorage.getItem('meetmind_context') || '';
+      document.getElementById('apiKeyInput').value = apiKey;
+      document.getElementById('modelSelect').value = selectedModel;
+      document.getElementById('contextInput').value = sessionContext;
+      const savedCustomJargon = localStorage.getItem('meetmind_custom_jargon');
+      if (savedCustomJargon && document.getElementById('customJargonInput')) {
+        document.getElementById('customJargonInput').value = savedCustomJargon;
+      }
+      document.getElementById('modelSelectPrompt').value = selectedModel;
+      showApp();
+      // Silently fetch real active models from Google API
+      refreshModelList(apiKey);
+    }
+
+    if (window.location.protocol === 'file:') {
+      const banner = document.getElementById('fileProtocolBanner');
+      if (banner) {
+        banner.style.display = 'flex';
+        const link = document.getElementById('fileBannerLink');
+        const currentKey = localStorage.getItem('meetmind_apikey') || '';
+        if (link && currentKey) {
+          link.href = 'http://localhost:3000/?key=' + encodeURIComponent(currentKey);
+        }
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      const panel = document.getElementById('settingsPanel');
+      const toggle = document.getElementById('settingsToggle');
+      if (!panel.contains(e.target) && !toggle.contains(e.target)) {
+        panel.classList.remove('open');
+      }
+    });
+  });
+
+  async function refreshModelList(key, showFeedback = false) {
+    if (!key) return;
+    try {
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + encodeURIComponent(key));
+      if (!res.ok) {
+        if (showFeedback) showToast('Failed to connect: HTTP ' + res.status, 'error');
+        return;
+      }
+      const data = await res.json();
+      if (data.models && Array.isArray(data.models)) {
+        const activeModels = data.models
+          .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+          .map(m => m.name.replace(/^models\//, ''))
+          .filter(id => !id.includes('embedding') && !id.includes('aqa') && !id.includes('imagen') && !id.includes('vision'));
+
+        // Exclude confirmed deprecated models
+        const available = activeModels.filter(id => id !== 'gemini-2.5-flash' && id !== 'gemini-2.0-flash' && !id.startsWith('gemini-1.5'));
+
+        if (available.length > 0) {
+          // Sort flash first, then pro, prioritized
+          available.sort((a, b) => {
+            if (a === 'gemini-3.8-flash') return -1;
+            if (b === 'gemini-3.8-flash') return 1;
+            if (a.includes('flash') && !b.includes('flash')) return -1;
+            if (!a.includes('flash') && b.includes('flash')) return 1;
+            return a.localeCompare(b);
+          });
+
+          dynamicFallbackModels = [...available];
+          updateModelDropdown('modelSelect', available, selectedModel);
+          updateModelDropdown('modelSelectPrompt', available, selectedModel);
+
+          if (showFeedback) {
+            showToast('Connected! ' + available.length + ' active models loaded ✓', 'success');
+          }
+        }
+      }
+    } catch (e) {
+      if (showFeedback) showToast('Error fetching models: ' + e.message, 'error');
+    }
+  }
+
+  function updateModelDropdown(id, models, current) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const prev = current || el.value;
+    el.innerHTML = '';
+    models.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      let label = m;
+      if (m === 'gemini-3.8-flash') label = 'Gemini 3.8 Flash (Recommended)';
+      else if (m === 'gemini-2.5-pro') label = 'Gemini 2.5 Pro (Capable)';
+      else if (m === 'gemini-3.8-pro') label = 'Gemini 3.8 Pro';
+      else if (m.includes('flash')) label = m + ' (Fast)';
+      else if (m.includes('pro')) label = m + ' (Pro)';
+      opt.textContent = label;
+      el.appendChild(opt);
+    });
+    if (models.includes(prev)) {
+      el.value = prev;
+    } else if (models.includes('gemini-3.8-flash')) {
+      el.value = 'gemini-3.8-flash';
+    }
+  }
+
+  async function testAndRefreshModels() {
+    const key = document.getElementById('apiKeyInput').value.trim() || apiKey;
+    if (!key) { showToast('Please enter an API key first', 'error'); return; }
+    showToast('Testing key & fetching models…', '');
+    await refreshModelList(key, true);
+  }
+
+  function showApp() {
+    document.getElementById('apiPrompt').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'grid';
+  }
+
+  function saveApiKeyPrompt() {
+    const key = document.getElementById('apiKeyPromptInput').value.trim();
+    let model = document.getElementById('modelSelectPrompt').value;
+    if (!key) { showToast('Please enter your API key', 'error'); return; }
+    if (MODEL_MIGRATION[model]) model = MODEL_MIGRATION[model];
+    apiKey = key;
+    selectedModel = model;
+    localStorage.setItem('meetmind_apikey', key);
+    localStorage.setItem('meetmind_model', model);
+    document.getElementById('apiKeyInput').value = key;
+    document.getElementById('modelSelect').value = model;
+    showToast('API key saved!', 'success');
+    showApp();
+    refreshModelList(key);
+  }
+
+  let pipWindow = null;
+
+  function toggleGhostMode() {
+    document.body.classList.toggle('ghost-mode');
+    const isGhost = document.body.classList.contains('ghost-mode');
+    showToast(isGhost ? '👻 Ghost Mode ON (70% opacity)' : 'Ghost Mode OFF (Solid)', 'success');
+  }
+
+  function toggleStealthModal() {
+    const modal = document.getElementById('stealthModal');
+    if (modal) {
+      modal.style.display = (modal.style.display === 'none' || !modal.style.display) ? 'flex' : 'none';
+    }
+  }
+
+  async function togglePipHUD() {
+    if (pipWindow) {
+      try { pipWindow.close(); } catch(e) {}
+      pipWindow = null;
+      updatePipBtnState(false);
+      return;
+    }
+
+    if ('documentPictureInPicture' in window) {
+      try {
+        pipWindow = await window.documentPictureInPicture.requestWindow({
+          width: 440,
+          height: 620
+        });
+
+        setupPipWindow(pipWindow);
+        updatePipBtnState(true);
+        showToast('📌 Always-On-Top HUD active! Position near your webcam.', 'success');
+      } catch (err) {
+        console.warn('Document PiP request failed:', err);
+        fallbackPopupWindow();
+      }
+    } else {
+      fallbackPopupWindow();
+    }
+  }
+
+  function fallbackPopupWindow() {
+    const w = 440;
+    const h = 620;
+    const left = window.screen.width - w - 40;
+    const top = 60;
+    pipWindow = window.open('', 'MeetMindHUD', `width=${w},height=${h},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`);
+    if (pipWindow) {
+      setupPipWindow(pipWindow);
+      updatePipBtnState(true);
+      showToast('📌 Floating HUD active! (Position near your webcam)', 'success');
+    } else {
+      showToast('Popup blocked by browser. Please allow popups for localhost:3000.', 'error');
+    }
+  }
+
+  function updatePipBtnState(active) {
+    const btn = document.getElementById('pipBtn');
+    if (!btn) return;
+    btn.classList.toggle('active', active);
+    btn.innerHTML = active ? '📌 HUD Active (Click to Dock)' : '📌 Pop Out HUD (Always On Top)';
+  }
+
+  function setupPipWindow(win) {
+    const doc = win.document;
+    doc.title = 'MeetMind HUD (Always On Top)';
+
+    // Copy styles from main document
+    document.querySelectorAll('link[rel="stylesheet"], link[rel="preconnect"]').forEach(link => {
+      doc.head.appendChild(link.cloneNode(true));
+    });
+
+    document.querySelectorAll('style').forEach(style => {
+      doc.head.appendChild(style.cloneNode(true));
+    });
+
+    // Custom HUD specific styling
+    const hudStyle = doc.createElement('style');
+    hudStyle.textContent = `
+      body {
+        margin: 0; padding: 0;
+        background: rgba(10, 13, 20, 0.96);
+        color: #e2e8f0;
+        font-family: 'Inter', -apple-system, sans-serif;
+        height: 100vh; display: flex; flex-direction: column;
+        overflow: hidden;
+        user-select: text;
+        font-size: 13px;
+        transition: opacity 0.2s ease;
+      }
+      .hud-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 8px 12px; background: rgba(15, 20, 32, 0.95);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        flex-shrink: 0;
+      }
+      .hud-title {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 12px; font-weight: 700; color: #fff;
+      }
+      .hud-controls {
+        display: flex; align-items: center; gap: 6px;
+      }
+      .hud-btn {
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 4px; color: #94a3b8;
+        font-size: 11px; padding: 3px 7px; cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .hud-btn:hover { background: rgba(99, 120, 255, 0.25); color: #fff; border-color: rgba(99, 120, 255, 0.4); }
+      .hud-tabs {
+        display: flex; background: rgba(10, 14, 26, 0.85);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 4px 8px; gap: 6px; flex-shrink: 0;
+      }
+      .hud-tab {
+        flex: 1; text-align: center; padding: 6px;
+        font-size: 11px; font-weight: 600; border-radius: 4px;
+        cursor: pointer; color: #64748b; background: transparent; border: none;
+        transition: all 0.15s ease;
+      }
+      .hud-tab.active {
+        background: rgba(99, 120, 255, 0.18);
+        color: #93c5fd; border: 1px solid rgba(99, 120, 255, 0.3);
+      }
+      .hud-body {
+        flex: 1; overflow-y: auto; padding: 10px;
+        scroll-behavior: smooth;
+      }
+      .hud-body::-webkit-scrollbar { width: 4px; }
+      .hud-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+      .hud-quick-ask {
+        display: flex; gap: 6px; padding: 8px 10px;
+        background: rgba(15, 20, 32, 0.95);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        flex-shrink: 0;
+      }
+      .hud-input {
+        flex: 1; background: rgba(10, 14, 26, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 4px;
+        color: #fff; font-size: 12px; padding: 5px 8px; outline: none;
+      }
+      .hud-input:focus { border-color: #6378ff; }
+      .hud-send {
+        background: #6378ff; border: none; border-radius: 4px;
+        color: #fff; font-size: 11px; font-weight: 600; padding: 5px 10px; cursor: pointer;
+      }
+      .opacity-select {
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 4px; color: #94a3b8; font-size: 10px; padding: 2px 4px; outline: none;
+      }
+      .opacity-select option { background: #0f1420; color: #fff; }
+    `;
+    doc.head.appendChild(hudStyle);
+
+    // Build HUD DOM
+    doc.body.innerHTML = `
+      <div class="hud-header">
+        <div class="hud-title">
+          <span>🧠 MeetMind HUD</span>
+          <span class="status-badge" id="hudStatusBadge"><span class="status-dot"></span><span id="hudStatusText">Ready</span></span>
+        </div>
+        <div class="hud-controls">
+          <select class="opacity-select" id="hudOpacity" title="Ghost Transparency">
+            <option value="1">100%</option>
+            <option value="0.9">90%</option>
+            <option value="0.75" selected>75%</option>
+            <option value="0.6">60%</option>
+            <option value="0.45">45%</option>
+          </select>
+          <button class="hud-btn" id="hudFontBtn" title="Toggle Font Size">A+</button>
+          <button class="hud-btn" id="hudDockBtn" title="Dock back into main tab">↩ Dock</button>
+        </div>
+      </div>
+      <div class="hud-tabs">
+        <button class="hud-tab active" id="tabAnswersBtn">⚡ Answers</button>
+        <button class="hud-tab" id="tabTranscriptBtn">🎙️ Live Transcript</button>
+      </div>
+      <div class="hud-body" id="hudAnswersContainer"></div>
+      <div class="hud-body" id="hudTranscriptContainer" style="display:none;"></div>
+      <div class="hud-quick-ask">
+        <input type="text" class="hud-input" id="hudAskInput" placeholder="Quick ask Gemini..." />
+        <button class="hud-send" id="hudAskBtn">Ask</button>
+      </div>
+    `;
+
+    // Transparency controller
+    const bodyEl = doc.body;
+    const opacitySelect = doc.getElementById('hudOpacity');
+    opacitySelect.addEventListener('change', (e) => {
+      bodyEl.style.opacity = e.target.value;
+    });
+    bodyEl.style.opacity = opacitySelect.value;
+
+    // Font size toggle
+    let isLarge = false;
+    doc.getElementById('hudFontBtn').addEventListener('click', () => {
+      isLarge = !isLarge;
+      bodyEl.style.fontSize = isLarge ? '14.5px' : '13px';
+    });
+
+    // Dock button
+    doc.getElementById('hudDockBtn').addEventListener('click', () => {
+      try { win.close(); } catch(e) {}
+    });
+
+    // Tab navigation
+    const tabAnswersBtn = doc.getElementById('tabAnswersBtn');
+    const tabTranscriptBtn = doc.getElementById('tabTranscriptBtn');
+    const answersBox = doc.getElementById('hudAnswersContainer');
+    const transcriptBox = doc.getElementById('hudTranscriptContainer');
+
+    tabAnswersBtn.addEventListener('click', () => {
+      tabAnswersBtn.classList.add('active');
+      tabTranscriptBtn.classList.remove('active');
+      answersBox.style.display = 'block';
+      transcriptBox.style.display = 'none';
+    });
+
+    tabTranscriptBtn.addEventListener('click', () => {
+      tabTranscriptBtn.classList.add('active');
+      tabAnswersBtn.classList.remove('active');
+      transcriptBox.style.display = 'block';
+      answersBox.style.display = 'none';
+    });
+
+    // Populate existing answers
+    const existingAnswers = document.getElementById('answersBody')?.innerHTML || '';
+    answersBox.innerHTML = existingAnswers;
+
+    // Populate existing transcripts
+    const existingTranscripts = document.getElementById('transcriptBody')?.innerHTML || '';
+    transcriptBox.innerHTML = existingTranscripts;
+
+    // Setup Quick Ask handler
+    const askInput = doc.getElementById('hudAskInput');
+    const askBtn = doc.getElementById('hudAskBtn');
+    const doAsk = async () => {
+      const q = askInput.value.trim();
+      if (!q) return;
+      askInput.value = '';
+      tabAnswersBtn.click();
+      await answerQuestion(q);
+    };
+    askBtn.addEventListener('click', doAsk);
+    askInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doAsk();
+    });
+
+    // Sync status badge
+    const mainBadge = document.getElementById('statusBadge');
+    const hudBadge = doc.getElementById('hudStatusBadge');
+    const hudText = doc.getElementById('hudStatusText');
+    if (mainBadge && hudBadge) {
+      hudBadge.className = mainBadge.className;
+      hudText.textContent = document.getElementById('statusText')?.textContent || 'Ready';
+    }
+
+    win.addEventListener('pagehide', () => {
+      pipWindow = null;
+      updatePipBtnState(false);
+    });
+  }
+
+  function toggleSettings() {
+    document.getElementById('settingsPanel').classList.toggle('open');
+  }
+
+  function saveSettings() {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    let model = document.getElementById('modelSelect').value;
+    const ctx = document.getElementById('contextInput').value.trim();
+    const customJargon = document.getElementById('customJargonInput')?.value.trim() || '';
+    if (!key) { showToast('API key cannot be empty', 'error'); return; }
+    if (MODEL_MIGRATION[model]) model = MODEL_MIGRATION[model];
+    apiKey = key;
+    selectedModel = model;
+    sessionContext = ctx;
+    localStorage.setItem('meetmind_apikey', key);
+    localStorage.setItem('meetmind_model', model);
+    localStorage.setItem('meetmind_context', ctx);
+    localStorage.setItem('meetmind_custom_jargon', customJargon);
+    document.getElementById('settingsPanel').classList.remove('open');
+    showToast('Settings saved!', 'success');
+    refreshModelList(key);
+  }
+
+  const JARGON_REPLACEMENTS = [
+    // SOQL & Salesforce Queries
+    { regex: /\b(circular query|circle query|so cool query|so kill query|cycle query|soquel query|socle query|so quile query|so quil query)\b/gi, rep: 'SOQL query' },
+    { regex: /\b(?:write|run|execute|create|build|generate|show)\s+(?:me\s+)?a\s+(?:circular|circle|cycle|so\s*quile?|so\s*quyl?e?)\b/gi, rep: 'write a SOQL' },
+    { regex: /\b(circular|so cool|so kill|socle|sockel|soquel|so quel|so-quel|so quile|so-quile|so quil|so-quil|so quyle|so quill|so-quill|so choir|so coil|so quail|so equal|s o q l|so q l|so cue l|so cube l)(?!\s+(?:dependency|dependencies|reference|references|buffer|buffers|linked\s+list|queue|queues|loop|loops|call|calls|import|imports|argument|reasoning|economy|progress))\b/gi, rep: 'SOQL' },
+    { regex: /\b(sauce l|so sell|social query|social search|s o s l|saucel|so soul)\b/gi, rep: 'SOSL' },
+    { regex: /\b(l w c|lbc|ldc|lwb|all wc)\b/gi, rep: 'LWC' },
+    { regex: /\b(lightning web component)\b/gi, rep: 'LWC' },
+    { regex: /\b(lightning web components)\b/gi, rep: 'LWCs' },
+    { regex: /\b(epic trigger|a packs trigger|a packs|a picks|apix|ape x|apex class|epic class|epic batch|epic code)\b/gi, rep: 'Apex' },
+    { regex: /\b(?:write|create|implement)\s+an?\s+epic\b/gi, rep: 'write an Apex' },
+    { regex: /\b(s object|s objects|s-object)\b/gi, rep: 'sObject' },
+    { regex: /\b(sales force)\b/gi, rep: 'Salesforce' },
+    { regex: /\b(visual force)\b/gi, rep: 'Visualforce' },
+    { regex: /\b(omni studio|omnistudio)\b/gi, rep: 'OmniStudio' },
+    { regex: /\b(governance limits)\b/gi, rep: 'governor limits' },
+
+    // Databases & SQL
+    { regex: /\b(no sequel|no scale|no sql|know sql)\b/gi, rep: 'NoSQL' },
+    { regex: /\b(post grass|post grace|post gre sql|postgress)\b/gi, rep: 'PostgreSQL' },
+    { regex: /\b(my sequel|my sequel database|my sql)\b/gi, rep: 'MySQL' },
+    { regex: /\b(red is cache|red is database|read is cache)\b/gi, rep: 'Redis cache' },
+    { regex: /\b(mongo d b|mango db)\b/gi, rep: 'MongoDB' },
+    { regex: /\b(acid property|acid properties)\b/gi, rep: 'ACID properties' },
+
+    // APIs & Web Architecture
+    { regex: /\b(rest a p i|rest a pie|restful api)\b/gi, rep: 'REST API' },
+    { regex: /\b(graph q l|graphic ul|graphical api|graph ql)\b/gi, rep: 'GraphQL' },
+    { regex: /\b(j w t|jvt token|j w t token|jot token)\b/gi, rep: 'JWT' },
+    { regex: /\b(o auth|o off|oh auth|o auth 2|o off to)\b/gi, rep: 'OAuth' },
+    { regex: /\b(g r p c|g rpc)\b/gi, rep: 'gRPC' },
+    { regex: /\b(web hook|web hooks)\b/gi, rep: 'webhook' },
+    { regex: /\b(micro services|micro service)\b/gi, rep: 'microservices' },
+
+    // Cloud, Infra & Tools
+    { regex: /\b(cuban 80s|cube net|cooperative cluster|kube net|k 8 s|k eight s)\b/gi, rep: 'Kubernetes' },
+    { regex: /\b(c i c d|c i \/ c d|c i c d pipeline|see eye see dee)\b/gi, rep: 'CI/CD' },
+    { regex: /\b(git hub|get hub)\b/gi, rep: 'GitHub' },
+    { regex: /\b(dock er|darker container)\b/gi, rep: 'Docker' },
+    { regex: /\b(terrafarm|terra form)\b/gi, rep: 'Terraform' },
+
+    // Core CS & Patterns
+    { regex: /\b(oops concept|oops concepts|oop's)\b/gi, rep: 'OOP concepts' },
+    { regex: /\b(solid principle|solid principles)\b/gi, rep: 'SOLID principles' },
+    { regex: /\b(p o c)\b/gi, rep: 'POC' },
+    { regex: /\b(c r u d|crud operation|crud operations)\b/gi, rep: 'CRUD' },
+    { regex: /\b(l r u cache|el are you cache)\b/gi, rep: 'LRU cache' },
+  ];
+
+  function correctTechJargon(text) {
+    if (!text || typeof text !== 'string') return text;
+    let out = text;
+    for (let i = 0; i < JARGON_REPLACEMENTS.length; i++) {
+      out = out.replace(JARGON_REPLACEMENTS[i].regex, JARGON_REPLACEMENTS[i].rep);
+    }
+    const custom = localStorage.getItem('meetmind_custom_jargon');
+    if (custom) {
+      const pairs = custom.split(/[\n,;]+/);
+      for (const pair of pairs) {
+        const parts = pair.split(/=>|:|->|=/);
+        if (parts.length === 2) {
+          const from = parts[0].trim();
+          const to = parts[1].trim();
+          if (from && to) {
+            try {
+              const r = new RegExp('\\b' + from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+              out = out.replace(r, to);
+            } catch (e) {}
+          }
+        }
+      }
+    }
+    return out;
+  }
+
+  function setContextPreset(preset) {
+    const input = document.getElementById('contextInput');
+    if (input) {
+      input.value = preset;
+      sessionContext = preset;
+      localStorage.setItem('meetmind_context', preset);
+      showToast('Domain context set: ' + preset.split('(')[0].trim(), 'success');
+    }
+  }
+
+  function updateDiag(text, state) {
+    const textEl = document.getElementById('diagText');
+    const dotEl = document.getElementById('diagDot');
+    if (textEl) textEl.textContent = text;
+    if (dotEl) dotEl.className = 'diag-dot ' + (state || '');
+  }
+
+  function toggleListening() {
+    if (isListening) stopListening();
+    else startListening();
+  }
+
+  async function startListening() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      showToast('Speech recognition not supported in this browser. Please use Google Chrome.', 'error');
+      updateMicPill('Unsupported', 'error');
+      updateDiag('Speech API unsupported in browser', 'error');
+      return;
+    }
+
+    if (window.location.protocol === 'file:') {
+      const banner = document.getElementById('fileProtocolBanner');
+      if (banner) banner.style.display = 'flex';
+      const key = localStorage.getItem('meetmind_apikey') || apiKey;
+      const targetUrl = 'http://localhost:3000/' + (key ? '?key=' + encodeURIComponent(key) : '');
+      showToast('Redirecting to http://localhost:3000 to enable microphone…', '');
+      setTimeout(() => {
+        window.location.href = targetUrl;
+      }, 700);
+      return;
+    }
+
+    updateMicPill('Starting…', 'silent');
+    updateDiag('Starting speech recognition…', 'live');
+
+    try {
+      if (recognition) {
+        recognition.onend = null;
+        try { recognition.abort(); } catch(e) {}
+        recognition = null;
+      }
+
+      recognition = new SR();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = document.getElementById('langSelect')?.value || navigator.language || 'en-US';
+      recognition.maxAlternatives = 1;
+
+      // Provide phonetic speech grammar hints for technical vocabulary if supported by browser
+      const SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
+      if (SpeechGrammarList) {
+        try {
+          const grammar = '#JSGF V1.0; grammar techVocabulary; public <terms> = SOQL | SOSL | Apex | LWC | Salesforce | sObject | NoSQL | PostgreSQL | Redis | MongoDB | GraphQL | REST | API | Docker | Kubernetes | CI/CD | AWS | Azure ;';
+          const speechRecognitionList = new SpeechGrammarList();
+          speechRecognitionList.addFromString(grammar, 1.0);
+          recognition.grammars = speechRecognitionList;
+        } catch (e) {
+          console.debug('SpeechGrammarList not supported in this browser version:', e);
+        }
+      }
+
+      recognition.onstart = () => {
+        isListening = true;
+        updateMicUI(true);
+        updateMicPill('Listening…', 'active');
+        updateDiag('Speech engine running — listening for voice…', 'live');
+        const emptyEl = document.getElementById('transcriptEmpty');
+        if (emptyEl) {
+          emptyEl.innerHTML = '<div class="transcript-empty-icon">🎙️</div><p style="color:var(--accent-blue)">Listening live… Speak or play meeting audio now</p>';
+        }
+      };
+
+      recognition.onaudiostart = () => {
+        updateDiag('Mic audio stream connected', 'live');
+      };
+
+      recognition.onsoundstart = () => {
+        updateDiag('Sound detected from mic', 'live');
+        updateMicPill('Hearing sound 🟢', 'active');
+        document.getElementById('waveform').classList.add('active');
+      };
+
+      recognition.onspeechstart = () => {
+        updateDiag('Human speech detected… transcribing', 'live');
+        updateMicPill('Hearing speech 🟢', 'active');
+      };
+
+      recognition.onspeechend = () => {
+        updateDiag('Speech pause — processing final text', 'live');
+      };
+
+      recognition.onaudioend = () => {
+        document.getElementById('waveform').classList.remove('active');
+      };
+
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          let t = event.results[i][0].transcript;
+          t = correctTechJargon(t);
+          if (event.results[i].isFinal) {
+            addTranscriptSegment(t.trim());
+            if (interimEl) { interimEl.remove(); interimEl = null; }
+            scheduleQuestionCheck(t.trim());
+            updateDiag('Transcribed: "' + t.trim().slice(0, 30) + '…"', 'live');
+          } else {
+            interim += t;
+          }
+        }
+        if (interim) {
+          interim = correctTechJargon(interim);
+          updateInterim(interim);
+          updateDiag('Hearing: "' + interim.slice(0, 30) + '…"', 'live');
+        }
+      };
+
+      recognition.onerror = (e) => {
+        console.warn('SpeechRecognition error:', e.error);
+        if (e.error === 'no-speech') {
+          updateDiag('No speech heard (check Windows mic volume / unmute)', 'warn');
+          updateMicPill('Mic Quiet 🟡', 'silent');
+        } else if (e.error === 'not-allowed') {
+          updateDiag('Microphone permission blocked in Chrome', 'error');
+          showToast('Microphone blocked. Click 🔒 in Chrome address bar to Allow mic.', 'error');
+          updateMicPill('Mic Blocked 🔴', 'error');
+          stopListening();
+        } else if (e.error === 'network') {
+          updateDiag('Network error connecting to Google Speech Service', 'error');
+          showToast('Speech network error. Ensure internet connection is active.', 'error');
+          updateMicPill('Network Error 🔴', 'error');
+          stopListening();
+        } else if (e.error === 'audio-capture') {
+          updateDiag('No microphone found or mic busy in another app', 'error');
+          showToast('Microphone in use by another app or disconnected.', 'error');
+          updateMicPill('No Mic 🔴', 'error');
+          stopListening();
+        } else if (e.error === 'service-not-allowed') {
+          updateDiag('Chrome speech service disallowed', 'error');
+          showToast('Speech service not allowed by browser.', 'error');
+          updateMicPill('Disallowed 🔴', 'error');
+          stopListening();
+        } else {
+          updateDiag('Speech error: ' + e.error, 'error');
+          showToast('Speech error: ' + e.error, 'error');
+        }
+      };
+
+      recognition.onend = () => {
+        if (isListening) {
+          setTimeout(() => {
+            if (isListening && recognition) {
+              try {
+                recognition.start();
+              } catch (err) {
+                console.warn('Speech recognition restart failed:', err);
+              }
+            }
+          }, 300);
+        }
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err);
+      showToast('Could not start speech recognition: ' + err.message, 'error');
+      updateMicPill('Error', 'error');
+      updateDiag('Failed to start: ' + err.message, 'error');
+      stopListening();
+    }
+  }
+
+  function updateMicPill(text, state) {
+    const pill = document.getElementById('micStatusPill');
+    if (!pill) return;
+    pill.textContent = text;
+    pill.className = 'mic-status-pill ' + (state || '');
+  }
+
+  function stopListening() {
+    isListening = false;
+    if (recognition) {
+      recognition.onend = null;
+      try { recognition.stop(); } catch(e) {}
+      recognition = null;
+    }
+    if (interimEl) {
+      const remaining = interimEl.textContent.trim();
+      if (remaining) {
+        addTranscriptSegment(remaining);
+        scheduleQuestionCheck(remaining);
+      }
+      interimEl.remove();
+      interimEl = null;
+    }
+    updateMicUI(false);
+    updateMicPill('Idle', '');
+    updateDiag('Stopped', '');
+    document.getElementById('waveform').classList.remove('active');
+  }
+
+  let isTestingMic = false;
+  async function testMicVolume() {
+    if (isTestingMic) return;
+    isTestingMic = true;
+    showToast('Testing microphone for 3 seconds… please speak now!', '');
+    updateDiag('Testing microphone volume…', 'live');
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const src = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 64;
+      src.connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+
+      let maxVol = 0;
+      const startTime = Date.now();
+
+      const interval = setInterval(() => {
+        analyser.getByteFrequencyData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) sum += data[i];
+        const avg = sum / data.length;
+        if (avg > maxVol) maxVol = avg;
+
+        if (Date.now() - startTime > 3500) {
+          clearInterval(interval);
+          stream.getTracks().forEach(t => t.stop());
+          ctx.close();
+          isTestingMic = false;
+
+          const pct = Math.round((maxVol / 255) * 100);
+          if (maxVol > 12) {
+            showToast('✅ Mic is working! Peak volume: ' + pct + '%', 'success');
+            updateDiag('Mic test passed (Volume: ' + pct + '%)', 'live');
+          } else {
+            showToast('⚠️ Microphone is completely SILENT (0%). Check Windows mic volume!', 'error');
+            updateDiag('Mic test failed (Silent / 0% volume)', 'warn');
+          }
+        }
+      }, 100);
+    } catch (err) {
+      isTestingMic = false;
+      showToast('Microphone test error: ' + err.message, 'error');
+      updateDiag('Mic test error: ' + err.message, 'error');
+    }
+  }
+
+  // --- Microsoft Teams & System Audio Capture (Hearing the Interviewer) ---
+  let isCapturingSystemAudio = false;
+  let systemAudioStream = null;
+  let systemAudioContext = null;
+  let systemAnalyser = null;
+  let systemVadInterval = null;
+  let systemMediaRecorder = null;
+  let systemAudioChunks = [];
+  let isInterviewerSpeaking = false;
+  let lastInterviewerSpeechTime = 0;
+  let interviewerSpeechStart = 0;
+
+  async function toggleMeetingAudioCapture() {
+    if (isCapturingSystemAudio) {
+      stopMeetingAudioCapture();
+    } else {
+      await startMeetingAudioCapture();
+    }
+  }
+
+  async function startMeetingAudioCapture() {
+    try {
+      showToast('Select "Entire Screen" and check "Also share system audio" to capture Teams!', 'info');
+
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          displaySurface: 'monitor',
+          width: { max: 1 },
+          height: { max: 1 },
+          frameRate: { max: 1 }
+        },
+        audio: {
+          autoGainControl: false,
+          echoCancellation: false,
+          noiseSuppression: false
+        }
+      });
+
+      const audioTracks = stream.getAudioTracks();
+      if (!audioTracks || audioTracks.length === 0) {
+        stream.getTracks().forEach(t => t.stop());
+        showToast('⚠️ No system audio detected! Make sure "Also share system audio" is checked in the Chrome window picker.', 'error');
+        updateTeamsAudioUI('idle');
+        return;
+      }
+
+      systemAudioStream = stream;
+      isCapturingSystemAudio = true;
+
+      // Handle user stopping screen share from Chrome floating bar
+      stream.getVideoTracks().forEach(track => {
+        track.onended = () => stopMeetingAudioCapture();
+      });
+      audioTracks[0].onended = () => stopMeetingAudioCapture();
+
+      // Hook up Web Audio Analyser for VAD
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      systemAudioContext = new AudioCtx();
+      const source = systemAudioContext.createMediaStreamSource(new MediaStream([audioTracks[0]]));
+      systemAnalyser = systemAudioContext.createAnalyser();
+      systemAnalyser.fftSize = 512;
+      source.connect(systemAnalyser);
+
+      updateTeamsAudioUI('active');
+      showToast('✅ Teams audio connected! Listening to interviewer...', 'success');
+      updateDiag('Listening to interviewer in Teams…', 'live');
+
+      const pcmData = new Uint8Array(systemAnalyser.frequencyBinCount);
+      isInterviewerSpeaking = false;
+      systemAudioChunks = [];
+
+      systemVadInterval = setInterval(() => {
+        if (!isCapturingSystemAudio || !systemAnalyser) return;
+        systemAnalyser.getByteFrequencyData(pcmData);
+        let sum = 0;
+        for (let i = 0; i < pcmData.length; i++) sum += pcmData[i];
+        const avg = sum / pcmData.length;
+
+        const VAD_THRESHOLD = 6; // Voice sensitivity
+
+        if (avg > VAD_THRESHOLD) {
+          lastInterviewerSpeechTime = Date.now();
+          if (!isInterviewerSpeaking) {
+            isInterviewerSpeaking = true;
+            interviewerSpeechStart = Date.now();
+            systemAudioChunks = [];
+            updateTeamsAudioUI('speaking');
+            updateDiag('Interviewer speaking in Teams…', 'live');
+            document.getElementById('waveform').classList.add('active');
+
+            try {
+              systemMediaRecorder = new MediaRecorder(new MediaStream([audioTracks[0]]), { mimeType: 'audio/webm' });
+              systemMediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) systemAudioChunks.push(e.data);
+              };
+              systemMediaRecorder.start(200);
+            } catch (err) {
+              console.error('MediaRecorder start error:', err);
+            }
+          }
+        } else if (isInterviewerSpeaking) {
+          const silenceDuration = Date.now() - lastInterviewerSpeechTime;
+          if (silenceDuration > 1300) { // 1.3 seconds of silence after speaking
+            isInterviewerSpeaking = false;
+            const speechDuration = Date.now() - interviewerSpeechStart;
+            updateTeamsAudioUI('processing');
+            updateDiag('Interviewer finished speaking — analyzing question…', 'live');
+            document.getElementById('waveform').classList.remove('active');
+
+            if (systemMediaRecorder && systemMediaRecorder.state !== 'inactive') {
+              systemMediaRecorder.onstop = async () => {
+                if (speechDuration >= 1400 && systemAudioChunks.length > 0) {
+                  const blob = new Blob(systemAudioChunks, { type: 'audio/webm' });
+                  await processInterviewerAudioBlob(blob);
+                } else {
+                  updateTeamsAudioUI('active');
+                  updateDiag('Listening to interviewer in Teams…', 'live');
+                }
+              };
+              try { systemMediaRecorder.stop(); } catch(e) {}
+            }
+          }
+        }
+      }, 100);
+
+    } catch (err) {
+      console.warn('System audio capture error:', err);
+      showToast('Could not capture system audio: ' + err.message, 'error');
+      updateTeamsAudioUI('idle');
+    }
+  }
+
+  function stopMeetingAudioCapture() {
+    isCapturingSystemAudio = false;
+    isInterviewerSpeaking = false;
+    clearInterval(systemVadInterval);
+    systemVadInterval = null;
+
+    if (systemMediaRecorder && systemMediaRecorder.state !== 'inactive') {
+      try { systemMediaRecorder.stop(); } catch(e) {}
+    }
+    if (systemAudioStream) {
+      systemAudioStream.getTracks().forEach(t => t.stop());
+      systemAudioStream = null;
+    }
+    if (systemAudioContext) {
+      try { systemAudioContext.close(); } catch(e) {}
+      systemAudioContext = null;
+    }
+    systemAnalyser = null;
+    updateTeamsAudioUI('idle');
+    updateDiag(isListening ? 'Listening to mic…' : 'Ready', isListening ? 'live' : '');
+    showToast('Teams audio capture stopped', '');
+  }
+
+  function updateTeamsAudioUI(state) {
+    const btn = document.getElementById('teamsAudioBtn');
+    const ctrlBtn = document.getElementById('teamsBtnControl');
+    const pill = document.getElementById('teamsAudioPill');
+
+    if (state === 'active') {
+      if (btn) { btn.classList.add('active'); btn.textContent = '⏹ Stop Meeting Audio'; }
+      if (ctrlBtn) ctrlBtn.classList.add('active');
+      if (pill) { pill.className = 'teams-audio-pill active'; pill.textContent = 'Meeting: Listening 🟢'; }
+    } else if (state === 'speaking') {
+      if (btn) { btn.classList.add('active'); btn.textContent = '🟢 Interviewer Speaking...'; }
+      if (ctrlBtn) ctrlBtn.classList.add('active');
+      if (pill) { pill.className = 'teams-audio-pill speaking'; pill.textContent = 'Interviewer Speaking 🗣️'; }
+    } else if (state === 'processing') {
+      if (btn) { btn.classList.add('active'); btn.textContent = '⚡ Analyzing Question...'; }
+      if (ctrlBtn) ctrlBtn.classList.add('active');
+      if (pill) { pill.className = 'teams-audio-pill processing'; pill.textContent = 'Analyzing ⚡'; }
+    } else {
+      if (btn) { btn.classList.remove('active'); btn.textContent = '🔊 Capture Meeting Audio'; }
+      if (ctrlBtn) ctrlBtn.classList.remove('active');
+      if (pill) { pill.className = 'teams-audio-pill'; pill.textContent = 'Meeting Audio: Idle'; }
+    }
+  }
+
+  async function processInterviewerAudioBlob(blob) {
+    if (!apiKey) {
+      showToast('No Gemini API key set in Settings ⚙️', 'error');
+      updateTeamsAudioUI('active');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Data = reader.result.split(',')[1];
+      if (!base64Data) return;
+
+      const loadId = 'load-' + Date.now();
+      const loadEl = document.createElement('div');
+      loadEl.className = 'answer-loading';
+      loadEl.id = loadId;
+      loadEl.innerHTML =
+        '<div style="font-size:11px;color:var(--accent-blue);margin-bottom:8px;font-weight:600;">🔊 Processing Interviewer Audio…</div>' +
+        '<div class="shimmer-line"></div><div class="shimmer-line"></div><div class="shimmer-line" style="width:70%"></div>';
+      document.getElementById('answersBody').appendChild(loadEl);
+      scrollToBottom('answersBody');
+
+      try {
+        const ctxLine = sessionContext ? '\nDomain Context: ' + sessionContext : '\nDomain Context: Technical Interview (Salesforce, Software Engineering, Architecture, Coding)';
+        const prompt =
+          'You are an intelligent real-time technical meeting assistant.' + ctxLine +
+          '\nListen carefully to this audio clip of an interviewer speaking in a technical meeting.' +
+          '\nInstructions:' +
+          '\n1. Transcribe the exact question, prompt, or technical problem the interviewer asked.' +
+          '\n2. If they asked a question or asked for code/query/design/logic: Provide the complete, accurate, production-ready answer or code block.' +
+          '\n3. If it is casual speech, small talk, or not a question: State "Conversational: <transcription>".' +
+          '\nFormat your response strictly as:' +
+          '\nQUESTION: <exact transcribed question>' +
+          '\nANSWER: <direct concise technical answer or complete code block>';
+
+        const result = await callGeminiAudioWithFallback(base64Data, prompt, 'audio/webm');
+        document.getElementById(loadId)?.remove();
+
+        // Extract QUESTION and ANSWER
+        const qMatch = result.match(/QUESTION:\s*([\s\S]*?)(?=ANSWER:|$)/i);
+        const aMatch = result.match(/ANSWER:\s*([\s\S]*)/i);
+
+        let question = qMatch ? qMatch[1].trim() : '';
+        let answer = aMatch ? aMatch[1].trim() : result.trim();
+
+        if (!question && !aMatch) {
+          question = 'Interviewer Inquiry';
+          answer = result.trim();
+        }
+
+        if (answer && !answer.toLowerCase().startsWith('not a question') && !answer.toLowerCase().startsWith('conversational:')) {
+          addTranscriptSegment('[Interviewer] ' + question);
+          addAnswerCard(question, answer);
+          showToast('Interviewer question detected & answered! ✓', 'success');
+        } else {
+          const casualText = question || answer.replace(/^conversational:\s*/i, '');
+          if (casualText) {
+            addTranscriptSegment('[Interviewer] ' + casualText);
+          }
+        }
+      } catch(err) {
+        document.getElementById(loadId)?.remove();
+        console.error('Audio processing error:', err);
+        showToast('Audio processing error: ' + err.message, 'error');
+      } finally {
+        updateTeamsAudioUI(isCapturingSystemAudio ? 'active' : 'idle');
+        updateDiag(isCapturingSystemAudio ? 'Listening to Teams audio…' : 'Ready', isCapturingSystemAudio ? 'live' : '');
+      }
+    };
+    reader.readAsDataURL(blob);
+  }
+
+  async function callGeminiAudioWithFallback(base64Data, prompt, mimeType) {
+    let activeModel = selectedModel;
+    if (MODEL_MIGRATION[activeModel]) activeModel = MODEL_MIGRATION[activeModel];
+
+    const modelsToTry = [
+      activeModel,
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+      'gemini-2.5-pro',
+      ...dynamicFallbackModels.filter(m => m !== activeModel)
+    ];
+
+    let lastError = null;
+    for (const model of modelsToTry) {
+      try {
+        const res = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey),
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  {
+                    inlineData: {
+                      mimeType: mimeType || 'audio/webm',
+                      data: base64Data
+                    }
+                  },
+                  {
+                    text: prompt
+                  }
+                ]
+              }],
+              generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+            })
+          }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        }
+        const errData = await res.json().catch(() => ({}));
+        lastError = new Error(errData.error?.message || ('HTTP ' + res.status));
+      } catch(err) {
+        lastError = err;
+      }
+    }
+    throw lastError || new Error('All models failed to process audio.');
+  }
+
+  function simulateVoiceInterviewer() {
+    const sampleQuestions = [
+      "Can you write a SOQL query to get all Accounts having more than three Contacts?",
+      "What is the difference between synchronous and asynchronous Apex in Salesforce, and when would you use a Queueable over a Batch?",
+      "Explain how governor limits work in Salesforce and what strategies you use to avoid hitting the SOQL 101 limit.",
+      "Can you describe the differences between REST and GraphQL APIs, and how rate limiting is typically handled?"
+    ];
+    const q = sampleQuestions[Math.floor(Math.random() * sampleQuestions.length)];
+
+    if (window.speechSynthesis) {
+      showToast('🗣️ Playing interviewer question aloud through your speakers…', 'info');
+      const utter = new SpeechSynthesisUtterance(q);
+      utter.rate = 0.95;
+      utter.pitch = 1.0;
+      utter.onstart = () => {
+        updateDiag('Playing sample voice question aloud…', 'live');
+      };
+      window.speechSynthesis.speak(utter);
+    } else {
+      showToast('Speech synthesis not supported in this browser.', 'error');
+    }
+  }
+
+  function updateMicUI(active) {
+    const btn = document.getElementById('micBtn');
+    const badge = document.getElementById('statusBadge');
+    const statusText = document.getElementById('statusText');
+    btn.classList.toggle('active', active);
+    btn.textContent = active ? '⏹' : '🎤';
+    badge.className = 'status-badge' + (active ? ' listening' : '');
+    statusText.textContent = active ? 'Listening…' : 'Ready';
+    document.getElementById('micLabel').textContent = active ? 'Listening to meeting…' : 'Click to start listening';
+    document.getElementById('waveform').classList.toggle('active', active);
+  }
+
+  function updateInterim(text) {
+    if (!interimEl) {
+      interimEl = document.createElement('div');
+      interimEl.className = 'transcript-interim';
+      document.getElementById('transcriptBody').appendChild(interimEl);
+    }
+    interimEl.textContent = text;
+    scrollToBottom('transcriptBody');
+
+    // Sync to HUD if open
+    if (pipWindow && !pipWindow.closed) {
+      const pipBody = pipWindow.document.getElementById('hudTranscriptContainer');
+      if (pipBody) {
+        let pipInterim = pipBody.querySelector('.transcript-interim');
+        if (!pipInterim) {
+          pipInterim = pipWindow.document.createElement('div');
+          pipInterim.className = 'transcript-interim';
+          pipBody.appendChild(pipInterim);
+        }
+        pipInterim.textContent = text;
+        pipBody.scrollTop = pipBody.scrollHeight;
+      }
+    }
+  }
+
+  function addTranscriptSegment(text) {
+    if (!text) return;
+    const body = document.getElementById('transcriptBody');
+    const isQ = isQuestion(text);
+    const el = document.createElement('div');
+    el.className = 'transcript-segment' + (isQ ? ' question' : '');
+    el.innerHTML = escapeHtml(text) + '<div class="segment-time">' + getTime() + '</div>';
+    body.appendChild(el);
+    transcriptSegments.push({ text, time: getTime(), isQuestion: isQ });
+    scrollToBottom('transcriptBody');
+
+    // Sync to HUD if open
+    if (pipWindow && !pipWindow.closed) {
+      const pipBody = pipWindow.document.getElementById('hudTranscriptContainer');
+      if (pipBody) {
+        pipBody.querySelector('.transcript-interim')?.remove();
+        const clone = el.cloneNode(true);
+        pipBody.appendChild(clone);
+        pipBody.scrollTop = pipBody.scrollHeight;
+      }
+    }
+
+    // Bridge to Native WPF Stealth HUD
+    if (window.location.protocol !== 'file:') {
+      fetch('/api/feed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'transcript', text, time: getTime(), isQuestion: isQ })
+      }).catch(() => {});
+    }
+  }
+
+  const DEMO_QUESTIONS = [
+    {
+      intro: "Hey everyone, thanks for joining the architecture review.",
+      context: "We are reviewing our API gateway and microservices integration plans.",
+      question: "Can you explain the main differences between REST and GraphQL APIs, and when to use each?"
+    },
+    {
+      intro: "Let's review the scalability discussion from yesterday's product sync.",
+      context: "We anticipate a 5x traffic surge during the upcoming product launch.",
+      question: "What strategies can we use to handle high traffic and prevent database bottlenecks?"
+    },
+    {
+      intro: "Quick check-in regarding our cloud deployment pipeline.",
+      context: "The client asked about data redundancy and business continuity.",
+      question: "What is the difference between a disaster recovery plan and high availability architecture?"
+    }
+  ];
+
+  let demoIndex = 0;
+
+  function simulateDemoQuestion() {
+    const demo = DEMO_QUESTIONS[demoIndex % DEMO_QUESTIONS.length];
+    demoIndex++;
+
+    const empty = document.getElementById('transcriptEmpty');
+    if (empty) empty.style.display = 'none';
+
+    showToast('Simulating meeting conversation…', '');
+    addTranscriptSegment(demo.intro);
+
+    setTimeout(() => {
+      addTranscriptSegment(demo.context);
+      setTimeout(() => {
+        addTranscriptSegment(demo.question);
+        scheduleQuestionCheck(demo.question);
+        showToast('Question detected! Gemini is answering…', 'success');
+      }, 700);
+    }, 600);
+  }
+
+  const QUESTION_STARTERS = [
+    // Direct question words & contractions
+    'what', "what's", 'whats', 'why', "why's", 'how', "how's", 'hows', 'when', 'where', 'who', 'whom', 'whose', 'which',
+    
+    // Auxiliary inversions (Yes/No & Choice)
+    'can you', 'could you', 'would you', 'will you', 'should you', 'can we', 'could we', 'should we', 'can someone', 'can anyone',
+    'do you', 'does', 'did you', 'have you', 'has', 'had you', 'is it', 'is there', 'are there', 'are you', 'were you',
+
+    // Coding & Technical Task Imperatives (e.g. "write a soql...", "create a trigger...", "query all...")
+    'write', 'write a', 'write an', 'write some', 'write code', 'write query', 'write a query', 'write soql', 'write a soql', 'write sql', 'write a sql',
+    'code', 'code a', 'code an',
+    'create', 'create a', 'create an',
+    'implement', 'implement a', 'implement an',
+    'build', 'build a', 'build an',
+    'generate', 'generate a', 'generate an',
+    'construct', 'construct a',
+    'develop', 'develop a',
+    'query', 'query the', 'query all',
+    'fetch', 'fetch the', 'fetch all',
+    'find', 'find the', 'find all',
+    'select', 'select the', 'select all',
+    'get', 'get the', 'get all',
+    'show', 'show me', 'show us', 'show how',
+    'solve', 'solve this',
+    'optimize', 'optimize this',
+    'debug', 'debug this',
+    'fix', 'fix this',
+    'refactor', 'refactor this',
+    'list', 'list the', 'list all', 'name the',
+
+    // Conversational & Interview Prompts
+    'let me know', 'let us know', 'lets know', "let's know",
+    'tell me', 'tell us', 'tell me about', 'tell us about',
+    'walk me through', 'walk us through', 'take me through', 'take us through', 'guide me through',
+    'explain', 'describe', 'elaborate', 'clarify', 'define', 'detail',
+    'give me an example', 'give an example', 'provide an example', 'give an overview', 'provide an overview',
+    'give me the code', 'give the code', 'give me a query', 'give a query', 'give me the soql', 'give the soql',
+    'differentiate', 'compare and contrast', 'distinguish',
+    'share your thoughts', 'share your experience', 'talk about', 'discuss',
+
+    // Declarative Inquiries & System Design
+    'i want to know', "i'd like to know", 'i would like to know', 'we want to know', "we'd like to know",
+    'i want to understand', "i'd like to understand", 'i am curious', "i'm curious",
+    'how would you', 'how do you', 'how can we', 'how should we', 'how to', 'how do i', 'how can i',
+    'suppose', 'imagine', 'assume'
+  ];
+
+  // Regex patterns to catch embedded questions & coding tasks regardless of conversational filler / preambles
+  const EMBEDDED_PATTERNS = [
+    // Coding & technical queries embedded anywhere in the sentence
+    /\b(write (?:a|an|the|some|code|query|soql|sql|circular|function|method|trigger|class|test|script|program|logic|component|regex))\b/i,
+    /\b(create (?:a|an|the|code|query|soql|sql|circular|function|method|trigger|class|test|script|table|component|lwc))\b/i,
+    /\b(implement (?:a|an|the|code|query|algorithm|solution|pattern|interface|class|function|logic))\b/i,
+    /\b(build (?:a|an|the|solution|app|query|trigger|class|pipeline|component))\b/i,
+    /\b(generate (?:a|an|the|code|query|soql|sql|data|regex|test))\b/i,
+    /\b(show (?:me|us) (?:how|the|a|an|code|query|syntax|soql|sql))\b/i,
+    /\b(give (?:me|us) (?:the|a) (?:code|query|soql|sql|syntax|solution|example))\b/i,
+    /\b(how (?:to|do i|can i|would you) (?:write|get|fetch|query|create|implement|solve|find|filter|optimize|call|handle))\b/i,
+    /\b(?:soql|sql|circular|query|trigger|apex|lwc) (?:to|for|that|which)\b/i,
+    /\b(?:write|create|implement|build|generate|run|execute)\s+(?:a|an|the|some)?\s*\w*\s*(?:to\s+(?:get|fetch|find|retrieve|query|select|calculate|filter|display|show|return))\b/i,
+    /\b(?:to\s+(?:get|fetch|find|retrieve|query|select)\s+(?:the\s+|all\s+)?(?:accounts?|contacts?|records?|users?|leads?|opportunities?|data|rows?|items?|customers?))\b/i,
+    /\b(get (?:the|all) (?:accounts?|contacts?|records?|users?|data|leads?|opportunities?))\b/i,
+    /\b(find (?:the|all) (?:accounts?|contacts?|records?|users?|data))\b/i,
+
+    // Interview Prompts & Imperatives
+    /\b(let (?:me|us) know)\b/i,
+    /\b(tell (?:me|us)(?: about)?)\b/i,
+    /\b(walk (?:me|us) through)\b/i,
+    /\b(take (?:me|us) through)\b/i,
+    /\b(what (?:is|are|was|were|do|does|did|would|should|can|could|makes|happens))\b/i,
+    /\b(what's|whats)\b/i,
+    /\b(why (?:is|are|was|were|do|does|did|would|should|can|could))\b/i,
+    /\b(how (?:is|are|was|were|do|does|did|would|should|can|could|to))\b/i,
+    /\b(how's|hows)\b/i,
+    /\b(difference between)\b/i,
+    /\b(differences between)\b/i,
+    /\b(explain (?:how|why|what|the|me|us))\b/i,
+    /\b(describe (?:how|why|what|the|your))\b/i,
+    /\b(can (?:you|we|someone|anyone) (?:tell|explain|clarify|describe|elaborate|share|give|write|show))\b/i,
+    /\b(could (?:you|we|someone|anyone) (?:tell|explain|clarify|describe|elaborate|share|give|write|show))\b/i,
+    /\b(would (?:you) (?:mind|explain|say|recommend|use|write))\b/i,
+    /\b(give (?:me|us) an? (?:example|overview|idea))\b/i,
+    /\b(your (?:thoughts|perspective|view|opinion|approach) on)\b/i,
+    /\b(how would you (?:design|approach|solve|handle|implement|architect|build|test|query|write))\b/i,
+    /\b(pros and cons of)\b/i,
+    /\b(advantages and disadvantages)\b/i,
+    /\b(best practices? for)\b/i,
+    /\b(when (?:should|to|would) (?:we|you) use)\b/i,
+  ];
+
+  function isQuestion(text) {
+    if (!text || typeof text !== 'string') return false;
+    const t = text.trim().toLowerCase();
+
+    // 1. Explicit question mark
+    if (t.endsWith('?')) return true;
+
+    // 2. Starts with a question/prompt phrase
+    const startsWithQ = QUESTION_STARTERS.some(w => t.startsWith(w + ' ') || t.startsWith(w + ',') || t === w);
+    if (startsWithQ) return true;
+
+    // 3. Embedded inquiry pattern anywhere in the sentence (handles preambles like "So moving forward, write a SOQL...")
+    const hasEmbeddedQ = EMBEDDED_PATTERNS.some(regex => regex.test(t));
+    if (hasEmbeddedQ) return true;
+
+    return false;
+  }
+
+  function scheduleQuestionCheck(text) {
+    if (!isQuestion(text)) return;
+    clearTimeout(questionTimer);
+    questionBuffer += ' ' + text;
+    questionTimer = setTimeout(() => {
+      const q = questionBuffer.trim();
+      questionBuffer = '';
+      if (q && !pendingQuestions.has(q)) {
+        pendingQuestions.add(q);
+        answerQuestion(q);
+      }
+    }, 900);
+  }
+
+  async function answerQuestion(question) {
+    if (!apiKey) { showToast('No API key — open Settings ⚙️', 'error'); return; }
+
+    document.getElementById('answersEmpty').style.display = 'none';
+    setStatus('processing');
+
+    const loadId = 'load-' + Date.now();
+    const loadEl = document.createElement('div');
+    loadEl.className = 'answer-loading';
+    loadEl.id = loadId;
+    loadEl.innerHTML =
+      '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;font-style:italic;">Answering: &ldquo;' +
+      escapeHtml(question.slice(0,80)) + (question.length > 80 ? '&hellip;' : '') +
+      '&rdquo;</div>' +
+      '<div class="shimmer-line"></div><div class="shimmer-line"></div><div class="shimmer-line" style="width:70%"></div>';
+    document.getElementById('answersBody').appendChild(loadEl);
+    scrollToBottom('answersBody');
+
+    try {
+      const recentCtx = transcriptSegments.slice(-8).map(s => s.text).join(' ');
+      const ctxLine = sessionContext ? '\nMeeting context: ' + sessionContext : '\nMeeting context: Technical Interview (Salesforce, Software Engineering, Architecture)';
+      const prompt = 'You are an intelligent, concise technical meeting assistant.' + ctxLine +
+        '\nRecent transcript: "' + recentCtx + '"' +
+        '\nQuestion/Task asked in the meeting: "' + question + '"' +
+        '\nInstructions:' +
+        '\n1. The speech-to-text transcript may contain phonetic misspellings of technical jargon (e.g. "circular" / "so quile" -> SOQL, "social" -> SOSL, "epic" -> Apex, "graphic ul" -> GraphQL, "no sequel" -> NoSQL). Contextually infer the intended technical term.' +
+        '\n2. If the user asks for code, a query (e.g. SOQL, SQL, Apex, JavaScript, Python), or syntax: Provide the complete, exact, production-ready code or query snippet inside standard markdown code blocks (e.g. ```soql ... ```), followed by a concise 1-2 sentence explanation.' +
+        '\n3. Always output complete code. Never truncate or leave code blocks unfinished.' +
+        '\n4. Otherwise: Give a clear, accurate, helpful answer in 2-4 sentences. Be direct, professional, and confident.';
+
+      const answer = await callGeminiWithFallback(prompt, loadId);
+      document.getElementById(loadId)?.remove();
+      addAnswerCard(question, answer);
+    } catch (err) {
+      document.getElementById(loadId)?.remove();
+      addAnswerCard(question, 'Error: ' + err.message, true);
+      showToast('Gemini error: ' + err.message.slice(0, 60), 'error');
+    } finally {
+      setStatus(isListening ? 'listening' : 'idle');
+      pendingQuestions.delete(question);
+    }
+  }
+
+  const RETRYABLE_PHRASES = [
+    'high demand',
+    'overloaded',
+    'try again later',
+    'temporarily',
+    '503',
+    '500',
+    '429',
+    'resource exhausted',
+    'quota',
+    'rate limit',
+    'no longer available',
+    'not available',
+    'not found',
+    'deprecated',
+    'update your code',
+    'is not supported',
+    'is no longer supported'
+  ];
+
+  function isRetryableError(msg) {
+    if (!msg) return false;
+    const lower = String(msg).toLowerCase();
+    return RETRYABLE_PHRASES.some(p => lower.includes(p));
+  }
+
+  async function callGeminiWithFallback(prompt, loadId) {
+    // Ensure clean model selection
+    let activeModel = selectedModel;
+    if (MODEL_MIGRATION[activeModel]) {
+      activeModel = MODEL_MIGRATION[activeModel];
+      selectedModel = activeModel;
+      localStorage.setItem('meetmind_model', activeModel);
+    }
+
+    const modelsToTry = [
+      activeModel,
+      ...dynamicFallbackModels.filter(m => m !== activeModel)
+    ];
+
+    let lastError = null;
+
+    for (let i = 0; i < modelsToTry.length; i++) {
+      const model = modelsToTry[i];
+
+      // Try up to 2 attempts for transient high-demand spikes
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        const loadEl = document.getElementById(loadId);
+        if (i > 0 || attempt > 1) {
+          if (loadEl) {
+            let hint = loadEl.querySelector('.fallback-hint');
+            if (!hint) {
+              hint = document.createElement('div');
+              hint.className = 'fallback-hint';
+              hint.style.cssText = 'font-size:11px;color:var(--accent-amber);margin-bottom:8px;font-weight:500;';
+              loadEl.prepend(hint);
+            }
+            if (attempt > 1) {
+              hint.textContent = '⏳ ' + model + ' busy, retrying in 1.2s (attempt 2)…';
+            } else {
+              hint.textContent = '⚡ ' + modelsToTry[i-1] + ' unavailable, switching to ' + model + '…';
+            }
+          }
+          if (attempt > 1) {
+            await new Promise(r => setTimeout(r, 1200));
+          } else {
+            showToast('Switching to ' + model + '…', '');
+            await new Promise(r => setTimeout(r, 600));
+          }
+        }
+
+        try {
+          const res = await fetch(
+            'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + apiKey,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.3, maxOutputTokens: 2048 }
+              })
+            }
+          );
+
+          if (res.ok) {
+            const data = await res.json();
+            if (i > 0) showToast('Answered via ' + model + ' ✓', 'success');
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No answer generated.';
+          }
+
+          const errData = await res.json().catch(() => ({}));
+          const errMsg = errData.error?.message || 'HTTP ' + res.status;
+          lastError = new Error(errMsg);
+
+          // If high demand spike on attempt 1, retry once on this model
+          if (errMsg.toLowerCase().includes('high demand') && attempt === 1) {
+            continue;
+          }
+
+          // If retryable/unavailable, skip to next model
+          if (isRetryableError(errMsg)) {
+            break;
+          } else {
+            // Non-retryable error (e.g. invalid API key) - throw immediately
+            throw lastError;
+          }
+        } catch (fetchErr) {
+          lastError = fetchErr;
+          if (isRetryableError(fetchErr.message)) {
+            break;
+          } else {
+            throw fetchErr;
+          }
+        }
+      }
+    }
+
+    throw lastError || new Error('All models are currently busy. Please try again in a moment.');
+  }
+
+  function formatAnswer(raw) {
+    if (!raw) return '';
+
+    // Auto-close dangling open code block if truncated
+    let safeRaw = raw;
+    const backticks = safeRaw.match(/```/g) || [];
+    if (backticks.length % 2 !== 0) {
+      safeRaw += '\n```';
+    }
+
+    // 1. Extract and preserve code blocks
+    const codeBlocks = [];
+    let processed = safeRaw.replace(/```([a-zA-Z0-9_\-\+]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const idx = codeBlocks.length;
+      const cleanLang = (lang || 'code').trim().toUpperCase();
+      const codeHtml = 
+        '<div class="code-block">' +
+          '<div class="code-header">' +
+            '<span class="code-lang">' + escapeHtml(cleanLang) + '</span>' +
+            '<button type="button" class="btn-copy-code" onclick="copySnippet(this)">📋 Copy Code</button>' +
+          '</div>' +
+          '<pre class="code-content"><code>' + escapeHtml(code.trim()) + '</code></pre>' +
+        '</div>';
+      codeBlocks.push(codeHtml);
+      return '%%CODEBLOCK_' + idx + '%%';
+    });
+
+    // 2. Escape regular HTML
+    processed = escapeHtml(processed);
+
+    // 3. Bold: **text**
+    processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // 4. Inline code: `code`
+    processed = processed.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+
+    // 5. Lists (unordered)
+    processed = processed.replace(/^[*-]\s+(.+)$/gm, '<li>$1</li>');
+    processed = processed.replace(/((?:<li>.*<\/li>\s*)+)/g, '<ul class="answer-list">$1</ul>');
+
+    // 6. Numbered lists
+    processed = processed.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+
+    // 7. Paragraph line breaks
+    processed = processed.replace(/\n\n+/g, '<br/><br/>').replace(/\n/g, '<br/>');
+
+    // 8. Restore code blocks
+    processed = processed.replace(/%%CODEBLOCK_(\d+)%%/g, (m, idx) => {
+      return codeBlocks[parseInt(idx, 10)] || '';
+    });
+
+    return processed;
+  }
+
+  function copySnippet(btn) {
+    const code = btn.closest('.code-block')?.querySelector('.code-content code')?.textContent || '';
+    if (code) {
+      navigator.clipboard.writeText(code).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 2000);
+      });
+    }
+  }
+
+  function addAnswerCard(question, answer, isError) {
+    const body = document.getElementById('answersBody');
+    const id = 'ans-' + Date.now();
+    const card = document.createElement('div');
+    card.className = 'answer-card';
+    card.id = id;
+    const formattedHtml = isError
+      ? '<span style="color:var(--accent-red)">' + escapeHtml(answer) + '</span>'
+      : formatAnswer(answer);
+
+    card.innerHTML =
+      '<div class="answer-card-header">' +
+        '<div class="answer-q-icon">❓</div>' +
+        '<div class="answer-question">' + escapeHtml(question) + '</div>' +
+      '</div>' +
+      '<div class="answer-card-body">' +
+        '<div class="answer-text">' + formattedHtml + '</div>' +
+      '</div>' +
+      '<div class="answer-card-footer">' +
+        '<span class="answer-time">' + getTime() + '</span>' +
+        '<button class="btn-copy" onclick="copyAnswer(\'' + id + '\')">📋 Copy answer</button>' +
+      '</div>';
+    body.appendChild(card);
+    scrollToBottom('answersBody');
+
+    // Sync to HUD if active
+    if (pipWindow && !pipWindow.closed) {
+      const pipBody = pipWindow.document.getElementById('hudAnswersContainer');
+      if (pipBody) {
+        const cardClone = card.cloneNode(true);
+        pipBody.appendChild(cardClone);
+        pipWindow.document.getElementById('answersEmpty')?.remove();
+        pipBody.scrollTop = pipBody.scrollHeight;
+      }
+    }
+
+    // Bridge to Native WPF Stealth HUD
+    if (window.location.protocol !== 'file:') {
+      fetch('/api/feed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'answer', question, answer, time: getTime() })
+      }).catch(() => {});
+    }
+  }
+
+  async function askManual() {
+    const input = document.getElementById('manualInput');
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    document.getElementById('answersEmpty').style.display = 'none';
+    await answerQuestion(q);
+  }
+
+  function setStatus(state) {
+    const badge = document.getElementById('statusBadge');
+    const text = document.getElementById('statusText');
+    if (state === 'listening') { badge.className = 'status-badge listening'; text.textContent = 'Listening\u2026'; }
+    else if (state === 'processing') { badge.className = 'status-badge processing'; text.textContent = 'Thinking\u2026'; }
+    else { badge.className = 'status-badge'; text.textContent = 'Ready'; }
+
+    // Sync to HUD if active
+    if (pipWindow && !pipWindow.closed) {
+      const hudBadge = pipWindow.document.getElementById('hudStatusBadge');
+      const hudText = pipWindow.document.getElementById('hudStatusText');
+      if (hudBadge && hudText) {
+        if (state === 'listening') { hudBadge.className = 'status-badge listening'; hudText.textContent = 'Listening\u2026'; }
+        else if (state === 'processing') { hudBadge.className = 'status-badge processing'; hudText.textContent = 'Thinking\u2026'; }
+        else { hudBadge.className = 'status-badge'; hudText.textContent = 'Ready'; }
+      }
+    }
+  }
+
+  function clearTranscript() {
+    transcriptSegments = [];
+    document.getElementById('transcriptBody').innerHTML =
+      '<div class="transcript-empty" id="transcriptEmpty"><div class="transcript-empty-icon">🎤</div><p>Click the microphone below to start listening to your meeting</p></div>';
+    if (pipWindow && !pipWindow.closed) {
+      const box = pipWindow.document.getElementById('hudTranscriptContainer');
+      if (box) box.innerHTML = '';
+    }
+  }
+
+  function clearAnswers() {
+    document.getElementById('answersBody').innerHTML =
+      '<div class="answer-empty" id="answersEmpty"><div class="answer-empty-icon">💡</div><p>Detected questions will be answered here automatically by Gemini</p></div>';
+    if (pipWindow && !pipWindow.closed) {
+      const box = pipWindow.document.getElementById('hudAnswersContainer');
+      if (box) box.innerHTML = '';
+    }
+    if (window.location.protocol !== 'file:') {
+      fetch('/api/clear', { method: 'POST' }).catch(() => {});
+    }
+  }
+
+  function copyTranscript() {
+    const text = transcriptSegments.map(s => s.text).join('\n');
+    if (!text) { showToast('Nothing to copy yet', 'error'); return; }
+    navigator.clipboard.writeText(text).then(() => showToast('Transcript copied!', 'success'));
+  }
+
+  function copyAnswer(id) {
+    const card = document.getElementById(id);
+    const text = card?.querySelector('.answer-text')?.innerText || '';
+    if (text) {
+      navigator.clipboard.writeText(text).then(() => showToast('Answer copied!', 'success'));
+    }
+  }
+
+  function scrollToBottom(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  function getTime() {
+    return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type || '');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.className = 'toast'; }, 3000);
+  }
+
+  // Poll for Quick Ask queries submitted from the Native Stealth HUD
+  setInterval(async () => {
+    if (window.location.protocol === 'file:') return;
+    try {
+      const res = await fetch('/api/ask');
+      const data = await res.json();
+      if (data && data.question) {
+        const empty = document.getElementById('answersEmpty');
+        if (empty) empty.style.display = 'none';
+        answerQuestion(data.question);
+      }
+    } catch (e) {}
+  }, 1000);
+</script>
+</body>
+</html>
