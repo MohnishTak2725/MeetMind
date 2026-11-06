@@ -37,11 +37,8 @@ MeetMind/
 ├── 🚀 stealth-mode.bat       # Main Windows launcher (Runs silently with 0 console windows)
 ├── 🛑 stop.bat               # Main Windows shutdown button (Silently kills all processes)
 │
-├── 📁 skills/                # Modular Interview Domain Skills (Agent-managed)
-│   ├── ⚡ salesforce.json    # Salesforce, Apex, SOQL, Agentforce & Data Cloud
-│   ├── 🏗️ system-design.json # Scalable Systems, Microservices, Caching & Sharding
-│   ├── 💻 fullstack.json     # Data Structures & Algorithms, Python, JS/TS, SQL
-│   └── 🎯 general.json       # General Software Engineering & Behavioral
+├── 📁 skills/                # 25 Global Salesforce & Industry Cloud Skills
+│   └── ⚡ salesforce-clouds.json # Core, Agentforce, Data Cloud, Certinia, nCino, Commerce, Auto...
 │
 ├── 🌐 index.html             # Web Application (Audio capture, STT, and Gemini AI engine)
 ├── ⚙️ server.ps1             # Local API Server & IPC bridge (http://localhost:3000)
@@ -64,22 +61,22 @@ flowchart TD
     C -->|Auto-starts| D["server.ps1 (Local Server on :3000)"]
     C -->|Auto-opens| E["Chrome / Edge (http://localhost:3000)"]
     
-    subgraph Browser Engine ["Chrome / Edge (index.html)"]
+    subgraph BrowserEngine["Chrome / Edge (index.html)"]
         E --> F["Audio Capture: System Loopback + Mic"]
         F --> G["Speech-to-Text & Question Detection"]
         G --> H["Google Gemini API (Generates Answer)"]
         H --> I["POST /api/feed"]
     end
     
-    subgraph Stealth HUD Window ["Native Stealth HUD (stealth-hud.ps1)"]
+    subgraph StealthHUD["Native Stealth HUD (stealth-hud.ps1)"]
         C --> J["SetWindowDisplayAffinity (WDA_EXCLUDEFROMCAPTURE 0x11)"]
         J --> K["ShowInTaskbar=False + HWND_TOPMOST"]
         K --> L["IVirtualDesktopManager (Follows active virtual desktop)"]
-        I -->|GET /api/feed (500ms polling)| M["Displays live answers & transcript"]
+        I -->|GET /api/feed - 500ms polling| M["Displays live answers & transcript"]
     end
 
-    subgraph Shutdown
-        N["Click '✕' / Tap 'Esc' / Double-Click stop.bat"] --> O["stop.ps1 terminates HUD & server cleanly"]
+    subgraph ShutdownFlow["Shutdown"]
+        N["Click Close / Tap Esc / Double-Click stop.bat"] --> O["stop.ps1 terminates HUD & server cleanly"]
     end
 ```
 
