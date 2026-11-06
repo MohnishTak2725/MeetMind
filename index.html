@@ -1835,6 +1835,27 @@
         border-radius: 4px; color: #94a3b8; font-size: 10px; padding: 2px 4px; outline: none;
       }
       .opacity-select option { background: #0f1420; color: #fff; }
+      .hud-btn.active {
+        background: rgba(99, 120, 255, 0.4) !important;
+        border-color: rgba(99, 120, 255, 0.6) !important;
+        color: #fff !important;
+      }
+      body.large-font .answer-text,
+      body.large-font .transcript-segment,
+      body.large-font .transcript-empty p,
+      body.large-font .answer-empty p {
+        font-size: 15.5px !important;
+        line-height: 1.8 !important;
+      }
+      body.large-font .answer-question {
+        font-size: 14.5px !important;
+      }
+      body.large-font .code-content code {
+        font-size: 13.5px !important;
+      }
+      body.large-font .code-lang {
+        font-size: 11px !important;
+      }
     `;
     doc.head.appendChild(hudStyle);
 
@@ -1880,10 +1901,16 @@
 
     // Font size toggle
     let isLarge = false;
-    doc.getElementById('hudFontBtn').addEventListener('click', () => {
-      isLarge = !isLarge;
-      bodyEl.style.fontSize = isLarge ? '14.5px' : '13px';
-    });
+    const fontBtn = doc.getElementById('hudFontBtn');
+    if (fontBtn) {
+      fontBtn.addEventListener('click', () => {
+        isLarge = !isLarge;
+        bodyEl.classList.toggle('large-font', isLarge);
+        fontBtn.textContent = isLarge ? 'A-' : 'A+';
+        fontBtn.classList.toggle('active', isLarge);
+        fontBtn.title = isLarge ? 'Switch to Normal Text (A-)' : 'Toggle Large Text (A+)';
+      });
+    }
 
     // Clear button
     doc.getElementById('hudClearBtn')?.addEventListener('click', () => {

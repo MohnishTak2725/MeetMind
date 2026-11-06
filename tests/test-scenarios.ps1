@@ -297,6 +297,9 @@ $hasCleanAsciiClose = $hudScript.Contains('Name="CloseBtn" Content="X"')
 $hasCleanShield = $hudScript.Contains('Text="SHIELD"')
 $hasStealthClearBtn = $hudScript.Contains('Name="ClearBtn" Content="Clear"') -and $hudScript.Contains('$clearBtn.Add_Click')
 $hasFeedResetCheck = $hudScript.Contains('$res.total -lt $script:seenCount')
+$hasStealthFontEngine = $hudScript.Contains('function Update-HudFontSize') -and
+                        $hudScript.Contains('$fontBtn.Content = if ($large) { "A-" }') -and
+                        $hudScript.Contains('$ansBox.FontSize = $ansFontSize')
 Assert-Test -Scenario "HUD Layout" -TestName "Close utility anchored to right edge via DockPanel" -Condition $hasCloseRightDock
 Assert-Test -Scenario "HUD Layout" -TestName "SkillBadgeText trims with ellipsis on long cloud names" -Condition $hasSkillEllipsis
 Assert-Test -Scenario "HUD Layout" -TestName "SkillBadgeBorder has MaxWidth protection" -Condition $hasSkillMaxWidth
@@ -305,6 +308,7 @@ Assert-Test -Scenario "HUD Layout" -TestName "Close button uses clean ASCII X wi
 Assert-Test -Scenario "HUD Layout" -TestName "Shield badge uses clean text without mojibake" -Condition $hasCleanShield
 Assert-Test -Scenario "HUD Layout" -TestName "Stealth HUD includes Clear button and click handler" -Condition $hasStealthClearBtn
 Assert-Test -Scenario "HUD Layout" -TestName "Stealth HUD detects server feed resets and clears cards" -Condition $hasFeedResetCheck
+Assert-Test -Scenario "HUD Layout" -TestName "Stealth HUD A+ engine dynamically resizes cards, textboxes and incoming feed" -Condition $hasStealthFontEngine
 
 # -----------------------------------------------------------------------------
 # SCENARIO 13: Overflow Scrollers & Responsiveness in index.html
@@ -315,11 +319,14 @@ $hasPanelActionsWrap = $indexHtml.Contains("flex-wrap: wrap") -and $indexHtml.Co
 $hasCodeScroll = $indexHtml.Contains("overflow-x: auto") -and $indexHtml.Contains(".code-content")
 $hasCloudBadgeEllipsis = $indexHtml.Contains("max-width: 220px") -and $indexHtml.Contains("text-overflow: ellipsis")
 $hasPipClearBtn = $indexHtml.Contains('id="hudClearBtn"') -and $indexHtml.Contains("hudClearBtn")
+$hasPipFontEngine = $indexHtml.Contains('body.large-font .answer-text') -and
+                    $indexHtml.Contains("fontBtn.textContent = isLarge ? 'A-' : 'A+'")
 Assert-Test -Scenario "Scroller Guardrails" -TestName "Settings panel has max-height and overflow-y: auto" -Condition $hasSettingsScroll
 Assert-Test -Scenario "Scroller Guardrails" -TestName "Panel actions wrap on narrow screens" -Condition $hasPanelActionsWrap
 Assert-Test -Scenario "Scroller Guardrails" -TestName "Code blocks scroll horizontally on wide queries" -Condition $hasCodeScroll
 Assert-Test -Scenario "Scroller Guardrails" -TestName "Header cloud badge protected against overflow" -Condition $hasCloudBadgeEllipsis
 Assert-Test -Scenario "Scroller Guardrails" -TestName "Browser PiP popup includes Clear button synced to main app" -Condition $hasPipClearBtn
+Assert-Test -Scenario "Scroller Guardrails" -TestName "Browser PiP A+ engine toggles body.large-font with 15.5px answers" -Condition $hasPipFontEngine
 
 # -----------------------------------------------------------------------------
 # SCENARIO 14: Resume Uploader & Candidate Project Grounding Engine

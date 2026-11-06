@@ -290,13 +290,56 @@ $opacityCombo.Add_SelectionChanged({
 })
 $win.Opacity = 0.85
 
-# Font toggle
+# Font toggle and dynamic sizing engine
 $isBigFont = $false
+
+function Update-HudFontSize {
+    param([bool]$large)
+    $ansSize = if ($large) { 15.0 } else { 11.5 }
+    $qSize   = if ($large) { 15.5 } else { 12.0 }
+    $tSize   = if ($large) { 15.0 } else { 11.5 }
+
+    if ($fontBtn) {
+        $fontBtn.Content = if ($large) { "A-" } else { "A+" }
+        $fontBtn.ToolTip = if ($large) { "Toggle Normal Text (A-)" } else { "Toggle Large Text (A+)" }
+        $brush = if ($large) { "#406378FF" } else { "#20FFFFFF" }
+        $fg    = if ($large) { "#93C5FD" } else { "#CBD5E1" }
+        $fontBtn.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString($brush)
+        $fontBtn.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString($fg)
+    }
+
+    # Update all existing answer cards
+    if ($answersContainer) {
+        foreach ($card in $answersContainer.Children) {
+            if ($card -is [System.Windows.Controls.Border]) {
+                $panel = $card.Child
+                if ($panel -is [System.Windows.Controls.StackPanel]) {
+                    foreach ($child in $panel.Children) {
+                        if ($child -is [System.Windows.Controls.TextBlock] -and $child.Text -like "Q: *") {
+                            $child.FontSize = $qSize
+                        }
+                        if ($child -is [System.Windows.Controls.TextBox]) {
+                            $child.FontSize = $ansSize
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    # Update all existing transcript lines
+    if ($transcriptContainer) {
+        foreach ($item in $transcriptContainer.Children) {
+            if ($item -is [System.Windows.Controls.TextBlock]) {
+                $item.FontSize = $tSize
+            }
+        }
+    }
+}
+
 $fontBtn.Add_Click({
     $script:isBigFont = -not $script:isBigFont
-    $newSize = if ($script:isBigFont) { 13.5 } else { 11.5 }
-    $answersContainer.SetValue([System.Windows.Controls.TextBlock]::FontSizeProperty, $newSize)
-    $transcriptContainer.SetValue([System.Windows.Controls.TextBlock]::FontSizeProperty, $newSize)
+    Update-HudFontSize -large $script:isBigFont
 })
 
 # Tab switching
@@ -395,16 +438,18 @@ $feedTimer.Add_Tick({
                     $panel = New-Object System.Windows.Controls.StackPanel
 
                     # Question header
+                    $qFontSize = if ($script:isBigFont) { 15.5 } else { 12.0 }
                     $qText = New-Object System.Windows.Controls.TextBlock
                     $qText.Text = "Q: " + $item.question
                     $qText.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#60A5FA")
                     $qText.FontWeight = [System.Windows.FontWeights]::Bold
-                    $qText.FontSize = 12
+                    $qText.FontSize = $qFontSize
                     $qText.TextWrapping = [System.Windows.TextWrapping]::Wrap
                     $qText.Margin = New-Object System.Windows.Thickness(0, 0, 0, 6)
                     [void]$panel.Children.Add($qText)
 
                     # Answer body
+                    $ansFontSize = if ($script:isBigFont) { 15.0 } else { 11.5 }
                     $ansBox = New-Object System.Windows.Controls.TextBox
                     $ansBox.Text = $item.answer
                     $ansBox.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#E2E8F0")
@@ -412,7 +457,7 @@ $feedTimer.Add_Tick({
                     $ansBox.BorderThickness = New-Object System.Windows.Thickness(0)
                     $ansBox.IsReadOnly = $true
                     $ansBox.TextWrapping = [System.Windows.TextWrapping]::Wrap
-                    $ansBox.FontSize = 11.5
+                    $ansBox.FontSize = $ansFontSize
                     $ansBox.Margin = New-Object System.Windows.Thickness(0, 0, 0, 6)
                     [void]$panel.Children.Add($ansBox)
 
@@ -457,10 +502,11 @@ $feedTimer.Add_Tick({
                     [void]$answersContainer.Children.Add($card)
                     $answersScroll.ScrollToBottom()
                 } elseif ($item.type -eq "transcript") {
+                    $tFontSize = if ($script:isBigFont) { 15.0 } else { 11.5 }
                     $tBlock = New-Object System.Windows.Controls.TextBlock
                     $tBlock.Text = "- " + $item.text
                     $tBlock.Foreground = if ($item.isQuestion) { [System.Windows.Media.BrushConverter]::new().ConvertFromString("#93C5FD") } else { [System.Windows.Media.BrushConverter]::new().ConvertFromString("#94A3B8") }
-                    $tBlock.FontSize = 11.5
+                    $tBlock.FontSize = $tFontSize
                     $tBlock.TextWrapping = [System.Windows.TextWrapping]::Wrap
                     $tBlock.Margin = New-Object System.Windows.Thickness(4, 2, 4, 4)
                     [void]$transcriptContainer.Children.Add($tBlock)
