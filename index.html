@@ -84,22 +84,105 @@
     .logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
     .logo-text span { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    .skill-picker-wrap {
-      display: flex; align-items: center; gap: 6px;
-      background: rgba(99, 120, 255, 0.08);
-      border: 1px solid rgba(99, 120, 255, 0.25);
+    .sf-clouds-wrap {
+      position: relative;
+      display: inline-block;
+      user-select: none;
+    }
+    .sf-clouds-trigger {
+      display: flex; align-items: center; gap: 7px;
+      background: rgba(99, 120, 255, 0.12);
+      border: 1px solid rgba(99, 120, 255, 0.35);
       border-radius: 99px;
-      padding: 4px 10px 4px 10px;
+      padding: 5px 12px;
+      cursor: pointer;
       transition: var(--transition);
     }
-    .skill-picker-wrap:hover { border-color: var(--accent-blue); }
-    .skill-picker-label {
-      font-size: 11px; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 0.5px;
+    .sf-clouds-trigger:hover {
+      background: rgba(99, 120, 255, 0.2);
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 12px rgba(99, 120, 255, 0.2);
     }
-    .skill-select {
-      background: transparent; border: none; color: #FFFFFF; font-size: 12px; font-weight: 600; cursor: pointer; outline: none;
+    .sf-clouds-icon { font-size: 14px; }
+    .sf-clouds-title { font-size: 11.5px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.3px; }
+    .sf-clouds-badge {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34D399;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 8px;
     }
-    .skill-select option { background: #121829; color: #FFFFFF; font-weight: 500; }
+    .sf-clouds-arrow { font-size: 10px; color: var(--text-secondary); margin-left: 2px; }
+
+    .sf-clouds-popover {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: 380px;
+      background: #0E1322;
+      border: 1px solid rgba(99, 120, 255, 0.3);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.6);
+      z-index: 1000;
+      overflow: hidden;
+      animation: popFade 0.15s ease-out;
+    }
+    .sf-clouds-popover.open { display: block; }
+    @keyframes popFade {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .sf-clouds-popover-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px;
+      background: #13192B;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .sf-popover-title { font-size: 12px; font-weight: 700; color: #FFFFFF; }
+    .sf-popover-reset {
+      background: transparent; border: none; color: #94A3B8; font-size: 11px; cursor: pointer; text-decoration: underline;
+    }
+    .sf-popover-reset:hover { color: #FFFFFF; }
+    .sf-clouds-list {
+      max-height: 320px;
+      overflow-y: auto;
+      padding: 6px 8px;
+    }
+    .sf-cloud-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.12s ease;
+      margin-bottom: 3px;
+    }
+    .sf-cloud-item:hover { background: rgba(99, 120, 255, 0.08); }
+    .sf-cloud-item.selected { background: rgba(99, 120, 255, 0.14); border: 1px solid rgba(99, 120, 255, 0.25); }
+    .sf-cloud-check {
+      margin-top: 2px;
+      width: 15px; height: 15px;
+      accent-color: #6378FF;
+      cursor: pointer;
+    }
+    .sf-cloud-info { flex: 1; }
+    .sf-cloud-name-row { display: flex; align-items: center; gap: 6px; }
+    .sf-cloud-name { font-size: 12px; font-weight: 600; color: #FFFFFF; }
+    .sf-cloud-desc { font-size: 10.5px; color: #94A3B8; margin-top: 2px; line-height: 1.3; }
+    .sf-clouds-popover-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 14px;
+      background: #111626;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      font-size: 11px; color: #64748B;
+    }
+    .sf-popover-done {
+      background: #6378FF; color: #FFFFFF; border: none; border-radius: 6px;
+      padding: 4px 12px; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+    .sf-popover-done:hover { background: #4F63F7; }
 
     .header-right { display: flex; align-items: center; gap: 10px; }
 
@@ -841,11 +924,27 @@
       <div class="logo-icon">🧠</div>
       <div class="logo-text">Meet<span>Mind</span></div>
     </div>
-    <div class="skill-picker-wrap" title="Active Interview Skill (Loaded from /skills directory)">
-      <span class="skill-picker-label">⚡ Skill:</span>
-      <select class="skill-select" id="skillSelect" onchange="changeSkill(this.value)">
-        <option value="salesforce">⚡ Salesforce &amp; Agentforce</option>
-      </select>
+    <!-- Salesforce Cloud Selector (Expandable Multi-Cloud Pill) -->
+    <div class="sf-clouds-wrap" id="sfCloudsWrap">
+      <div class="sf-clouds-trigger" onclick="toggleCloudsDropdown()" title="Configure Active Salesforce Clouds">
+        <span class="sf-clouds-icon">⚡</span>
+        <span class="sf-clouds-title">Salesforce:</span>
+        <span class="sf-clouds-badge" id="sfCloudsBadge">Core + Agentforce</span>
+        <span class="sf-clouds-arrow">▾</span>
+      </div>
+      <div class="sf-clouds-popover" id="sfCloudsPopover">
+        <div class="sf-clouds-popover-header">
+          <div class="sf-popover-title">Select Active Salesforce Clouds</div>
+          <button type="button" class="sf-popover-reset" onclick="resetCloudsDefault()">Reset Default</button>
+        </div>
+        <div class="sf-clouds-list" id="sfCloudsList">
+          <!-- Dynamically populated from /api/salesforce-clouds -->
+        </div>
+        <div class="sf-clouds-popover-footer">
+          <span id="activeCloudsCount">2 Clouds Active</span>
+          <button type="button" class="sf-popover-done" onclick="toggleCloudsDropdown()">Done ✓</button>
+        </div>
+      </div>
     </div>
     <div class="header-right">
       <button class="btn-pip" id="pipBtn" title="Pop out Always-On-Top floating HUD over Teams/Zoom/Meet" onclick="togglePipHUD()">
@@ -1106,61 +1205,152 @@
 
   let dynamicFallbackModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-2.5-pro'];
 
-  // Modular Interview Skills loaded from /skills directory
-  let loadedSkills = [];
-  let currentSkill = null;
+  // Multi-Cloud Salesforce Skills Architecture
+  let availableSalesforceClouds = [];
+  let selectedCloudIds = new Set(['core', 'agentforce']); // Core Platform & Agentforce selected by default
 
-  async function loadSkills() {
+  async function loadSalesforceClouds() {
     try {
-      const res = await fetch('/api/skills');
+      const res = await fetch('/api/salesforce-clouds');
       if (res.ok) {
-        const list = await res.json();
-        if (Array.isArray(list) && list.length > 0) {
-          loadedSkills = list;
-          const select = document.getElementById('skillSelect');
-          if (select) {
-            select.innerHTML = '';
-            loadedSkills.forEach(s => {
-              const opt = document.createElement('option');
-              opt.value = s.id;
-              opt.textContent = (s.icon ? s.icon + ' ' : '') + s.name;
-              select.appendChild(opt);
-            });
-            const saved = localStorage.getItem('meetmind_active_skill') || 'salesforce';
-            const matched = loadedSkills.find(s => s.id === saved) || loadedSkills[0];
-            select.value = matched.id;
-            currentSkill = matched;
-            syncActiveSkillToServer(matched.id);
-          }
-        }
+        availableSalesforceClouds = await res.json();
       }
-    } catch (e) {
-      console.log('Skills loaded in default mode');
+    } catch(e) {}
+
+    if (!availableSalesforceClouds || availableSalesforceClouds.length === 0) {
+      availableSalesforceClouds = [
+        { id: "core", name: "Core Platform", icon: "⚡", default: true, required: true, description: "Apex, SOQL/SOSL, LWC, Triggers, Flows & Limits" },
+        { id: "agentforce", name: "Agentforce (Atlas)", icon: "🤖", default: true, required: false, description: "Atlas Reasoning Engine, Topics, Invocables & Trust Layer" },
+        { id: "data-cloud", name: "Data Cloud", icon: "☁️", default: false, required: false, description: "Customer 360, DLO, DMO (__dlm), Identity Resolution & Zero Copy" },
+        { id: "sales", name: "Sales Cloud", icon: "💼", default: false, required: false, description: "Leads, Opportunities, Forecasting, Products, CPQ & Territory" },
+        { id: "service", name: "Service Cloud", icon: "🎧", default: false, required: false, description: "Cases, Omni-Channel, Entitlements/Milestones, Knowledge" },
+        { id: "experience", name: "Experience Cloud", icon: "🌐", default: false, required: false, description: "Communities, LWR, Customer/Partner Portals & Security" },
+        { id: "fsl", name: "Field Service (FSL)", icon: "🔧", default: false, required: false, description: "Work Orders, Service Appointments, Dispatcher Console, Scheduling" },
+        { id: "omnistudio", name: "OmniStudio", icon: "🎨", default: false, required: false, description: "OmniScripts, FlexCards, Data Mappers & Integration Procedures" },
+        { id: "marketing", name: "Marketing Cloud", icon: "📈", default: false, required: false, description: "Journey Builder, Automation Studio, Data Extensions, AMPscript" }
+      ];
     }
+
+    const saved = localStorage.getItem('meetmind_selected_clouds');
+    if (saved) {
+      try {
+        const arr = JSON.parse(saved);
+        if (Array.isArray(arr) && arr.length > 0) {
+          selectedCloudIds = new Set(arr);
+        }
+      } catch(e) {}
+    }
+    // Always enforce 'core' as required default
+    selectedCloudIds.add('core');
+    renderCloudsPopover();
+    updateCloudsBadge();
+    syncActiveSkillToServer();
   }
 
-  function changeSkill(skillId) {
-    const found = loadedSkills.find(s => s.id === skillId);
-    if (found) {
-      currentSkill = found;
-      localStorage.setItem('meetmind_active_skill', skillId);
-      syncActiveSkillToServer(skillId);
-      showToast('Active Skill: ' + found.name + ' ⚡', 'info');
-    }
+  function toggleCloudsDropdown() {
+    const pop = document.getElementById('sfCloudsPopover');
+    if (pop) pop.classList.toggle('open');
   }
 
-  function syncActiveSkillToServer(skillId) {
-    if (window.location.protocol !== 'file:') {
-      fetch('/api/skills/active', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ skillId })
-      }).catch(() => {});
+  document.addEventListener('click', (e) => {
+    const wrap = document.getElementById('sfCloudsWrap');
+    const pop = document.getElementById('sfCloudsPopover');
+    if (wrap && pop && !wrap.contains(e.target)) {
+      pop.classList.remove('open');
     }
+  });
+
+  function renderCloudsPopover() {
+    const list = document.getElementById('sfCloudsList');
+    if (!list) return;
+    list.innerHTML = '';
+    availableSalesforceClouds.forEach(c => {
+      const isSel = selectedCloudIds.has(c.id);
+      const isReq = c.required === true;
+      const row = document.createElement('div');
+      row.className = 'sf-cloud-item' + (isSel ? ' selected' : '');
+      row.onclick = (e) => {
+        if (e.target.tagName !== 'INPUT') {
+          toggleCloud(c.id);
+        }
+      };
+
+      row.innerHTML = `
+        <input type="checkbox" class="sf-cloud-check" ${isSel ? 'checked' : ''} ${isReq ? 'disabled' : ''} onchange="toggleCloud('${c.id}')" />
+        <div class="sf-cloud-info">
+          <div class="sf-cloud-name-row">
+            <span>${c.icon}</span>
+            <span class="sf-cloud-name">${c.name} ${isReq ? '<small style="color:#60A5FA;">(Default)</small>' : ''}</span>
+          </div>
+          <div class="sf-cloud-desc">${c.description}</div>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+  }
+
+  function toggleCloud(cloudId) {
+    if (cloudId === 'core') return;
+    if (selectedCloudIds.has(cloudId)) {
+      selectedCloudIds.delete(cloudId);
+    } else {
+      selectedCloudIds.add(cloudId);
+    }
+    localStorage.setItem('meetmind_selected_clouds', JSON.stringify([...selectedCloudIds]));
+    renderCloudsPopover();
+    updateCloudsBadge();
+    syncActiveSkillToServer();
+  }
+
+  function resetCloudsDefault() {
+    selectedCloudIds = new Set(['core', 'agentforce']);
+    localStorage.setItem('meetmind_selected_clouds', JSON.stringify([...selectedCloudIds]));
+    renderCloudsPopover();
+    updateCloudsBadge();
+    syncActiveSkillToServer();
+    showToast('Reset to Core + Agentforce', 'info');
+  }
+
+  function updateCloudsBadge() {
+    const badge = document.getElementById('sfCloudsBadge');
+    const countEl = document.getElementById('activeCloudsCount');
+    const count = selectedCloudIds.size;
+    let label = 'Core Platform';
+    const names = [];
+    availableSalesforceClouds.forEach(c => {
+      if (selectedCloudIds.has(c.id)) {
+        names.push(c.name.split(' ')[0]);
+      }
+    });
+
+    if (count === 1) {
+      label = 'Core Only';
+    } else if (count === 2) {
+      label = names.join(' + ');
+    } else {
+      label = 'Core + ' + (count - 1) + ' Clouds';
+    }
+
+    if (badge) badge.textContent = label;
+    if (countEl) countEl.textContent = count + ' Clouds Active';
+  }
+
+  function syncActiveSkillToServer() {
+    if (window.location.protocol === 'file:') return;
+    const names = [];
+    availableSalesforceClouds.forEach(c => {
+      if (selectedCloudIds.has(c.id)) names.push(c.name.split(' ')[0]);
+    });
+    const summary = '⚡ SF: ' + (names.slice(0, 3).join('+')) + (names.length > 3 ? '...' : '');
+    fetch('/api/skills/active', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ skillId: 'salesforce', activeLabel: summary })
+    }).catch(() => {});
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    loadSkills();
+    loadSalesforceClouds();
     // Check if API key is provided via query parameter (e.g. from file:// migration link)
     const urlParams = new URLSearchParams(window.location.search);
     const keyParam = urlParams.get('key');
@@ -2515,31 +2705,47 @@
     scrollToBottom('answersBody');
 
     try {
-      // Pre-process question with active skill phonetic dictionary
+      // Merge active clouds instructions and phonetics
+      const activeCloudObjs = availableSalesforceClouds.filter(c => selectedCloudIds.has(c.id));
+      
+      let mergedPhonetics = {};
+      let cloudInstructions = [];
+      activeCloudObjs.forEach(c => {
+        if (c.phonetics) Object.assign(mergedPhonetics, c.phonetics);
+        if (c.instructions) cloudInstructions.push('- ' + c.instructions);
+      });
+
+      // Apply all phonetic corrections from active clouds
       let cleanQ = question;
-      if (currentSkill && currentSkill.phonetics) {
-        for (const [misspelled, correct] of Object.entries(currentSkill.phonetics)) {
-          const regex = new RegExp('\\b' + misspelled + '\\b', 'gi');
-          cleanQ = cleanQ.replace(regex, correct);
-        }
+      for (const [misspelled, correct] of Object.entries(mergedPhonetics)) {
+        const regex = new RegExp('\\b' + misspelled + '\\b', 'gi');
+        cleanQ = cleanQ.replace(regex, correct);
       }
 
+      const activeCloudNames = activeCloudObjs.map(c => c.name).join(', ') || 'Salesforce Platform & Agentforce';
       const recentCtx = transcriptSegments.slice(-6).map(s => s.text).join(' ');
-      const ctxLine = sessionContext ? '\nAdditional context: ' + sessionContext : '';
-      
-      const sysRule = (currentSkill && currentSkill.systemPrompt)
-        ? currentSkill.systemPrompt
-        : 'You are an expert technical interview copilot providing articulate, spoken answers for a candidate.';
+      const ctxLine = sessionContext ? '\nCandidate Profile / Context: ' + sessionContext : '';
 
-      const maxToks = (currentSkill && currentSkill.maxTokens) ? currentSkill.maxTokens : 280;
+      const sysRule = "You are an elite Salesforce Principal Architect & Technical Interview Copilot preparing spoken answers for a candidate in a live interview.\n" +
+        "Active Clouds / Specializations: " + activeCloudNames + "\n\n" +
+        "Cloud Specific Architectures:\n" + cloudInstructions.join('\n') + "\n\n" +
+        "Strict Spoken Answer Guidelines:\n" +
+        "1. Candidate Spoken Tone: Write answers as articulate, confident speech that an interviewee can read out loud to the interviewer with high authority.\n" +
+        "2. For Conceptual / Architectural Questions (e.g. 'What is Salesforce?', 'Explain OmniStudio / DataRaptors', 'Explain FSL Dispatcher Console', 'What are Governor Limits?', 'What is Data Cloud?'):\n" +
+        "   - Provide a 2 to 3 sentence structured spoken explanation.\n" +
+        "   - State the definition, core architecture/objects, and practical business value.\n" +
+        "   - NEVER output fragmented comma lists like ':Core platform, Data Cloud, Agent'.\n" +
+        "3. For Coding / Query Tasks (e.g. SOQL, SOSL, Apex, LWC, IP/DataRaptor, AMPscript):\n" +
+        "   - Output the exact production-ready code or query snippet inside standard markdown code blocks immediately.\n" +
+        "   - Follow with 1 spoken sentence explaining the logic, indexing, or governor limit consideration.";
 
       const prompt = sysRule +
         (ctxLine ? '\nContext: ' + ctxLine : '') +
-        (recentCtx ? '\nRecent conversation: "' + recentCtx + '"' : '') +
+        (recentCtx ? '\nRecent conversation snippet: "' + recentCtx + '"' : '') +
         '\n\nInterview Question Asked: "' + cleanQ + '"' +
         '\nProvide the direct, articulate spoken answer for the candidate:';
 
-      const answer = await callGeminiWithFallback(prompt, loadId, maxToks);
+      const answer = await callGeminiWithFallback(prompt, loadId, 280);
       document.getElementById(loadId)?.remove();
       addAnswerCard(question, answer);
     } catch (err) {

@@ -23,6 +23,7 @@ $dir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $feedItems = [System.Collections.ArrayList]::Synchronized([System.Collections.ArrayList]::new())
 $askQueue = [System.Collections.ArrayList]::Synchronized([System.Collections.ArrayList]::new())
 $activeSkillId = "salesforce"
+$activeSkillLabel = "⚡ Salesforce: Core + Agentforce"
 
 while ($listener.IsListening) {
     try {
@@ -31,6 +32,30 @@ while ($listener.IsListening) {
         $response = $context.Response
 
         $urlPath = $request.Url.LocalPath
+
+        # API: /api/salesforce-clouds (GET available salesforce clouds)
+        if ($urlPath -eq "/api/salesforce-clouds") {
+            $response.ContentType = "application/json; charset=utf-8"
+            $response.Headers.Add("Access-Control-Allow-Origin", "*")
+            $response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS")
+            $response.Headers.Add("Access-Control-Allow-Headers", "Content-Type")
+
+            if ($request.HttpMethod -eq "OPTIONS") {
+                $response.StatusCode = 200
+                $response.Close()
+                continue
+            }
+
+            $cloudsFile = Join-Path $dir "skills\salesforce-clouds.json"
+            $json = "[]"
+            if (Test-Path $cloudsFile) {
+                $json = [System.IO.File]::ReadAllText($cloudsFile, [System.Text.Encoding]::UTF8)
+            }
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+            $response.OutputStream.Write($bytes, 0, $bytes.Length)
+            $response.Close()
+            continue
+        }
 
         # API: /api/skills (GET available skills from skills directory)
         if ($urlPath -eq "/api/skills") {
@@ -84,14 +109,17 @@ while ($listener.IsListening) {
                     try {
                         $data = $body | ConvertFrom-Json
                         if ($data.skillId) { $activeSkillId = $data.skillId }
+                        if ($data.activeLabel) { $activeSkillLabel = $data.activeLabel }
                     } catch {}
                 }
-                $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"status":"ok","activeSkillId":"' + $activeSkillId + '"}')
+                $json = @{ status = "ok"; activeSkillId = $activeSkillId; activeLabel = $activeSkillLabel } | ConvertTo-Json -Compress
+                $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
                 $response.OutputStream.Write($bytes, 0, $bytes.Length)
                 $response.Close()
                 continue
             } else {
-                $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"activeSkillId":"' + $activeSkillId + '"}')
+                $json = @{ activeSkillId = $activeSkillId; activeLabel = $activeSkillLabel } | ConvertTo-Json -Compress
+                $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
                 $response.OutputStream.Write($bytes, 0, $bytes.Length)
                 $response.Close()
                 continue

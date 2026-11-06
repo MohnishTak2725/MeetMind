@@ -329,13 +329,15 @@ $feedTimer.Add_Tick({
     if ($script:tickCount -eq 0 -and $skillBadgeText) {
         try {
             $sRes = Invoke-RestMethod -Uri "http://localhost:3000/api/skills/active" -Method GET -TimeoutSec 1 -ErrorAction SilentlyContinue
-            if ($sRes -and $sRes.activeSkillId) {
-                $lbl = switch ($sRes.activeSkillId) {
-                    "salesforce"     { "⚡ Salesforce" }
-                    "system-design"  { "🏗️ System Design" }
-                    "fullstack"      { "💻 Full-Stack" }
-                    "general"        { "🎯 General" }
-                    default          { "⚡ " + $sRes.activeSkillId }
+            if ($sRes) {
+                $lbl = if ($sRes.activeLabel) { $sRes.activeLabel } else {
+                    switch ($sRes.activeSkillId) {
+                        "salesforce"     { "⚡ Salesforce" }
+                        "system-design"  { "🏗️ System Design" }
+                        "fullstack"      { "💻 Full-Stack" }
+                        "general"        { "🎯 General" }
+                        default          { "⚡ " + $sRes.activeSkillId }
+                    }
                 }
                 if ($skillBadgeText.Text -ne $lbl) {
                     $skillBadgeText.Text = $lbl

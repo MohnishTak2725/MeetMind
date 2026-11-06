@@ -1,0 +1,164 @@
+[
+  {
+    "id": "core",
+    "name": "Core Platform",
+    "icon": "⚡",
+    "default": true,
+    "required": true,
+    "description": "Apex, SOQL/SOSL, LWC, Triggers, Flows, Governor Limits & Security",
+    "phonetics": {
+      "so quile": "SOQL",
+      "so kill": "SOQL",
+      "circular": "SOQL",
+      "social": "SOSL",
+      "epic": "Apex",
+      "trigger handler": "Trigger Handler",
+      "flow builder": "Flow Builder",
+      "governor limits": "Governor Limits",
+      "lightning web component": "LWC"
+    },
+    "instructions": "Core Platform: Master of Apex (Triggers, Batch, Queueable), SOQL aggregate queries (GROUP BY, HAVING), LWC reactivity, Flow Builder, and Governor Limit mitigation (bulkification, heap size, SOQL queries per transaction)."
+  },
+  {
+    "id": "agentforce",
+    "name": "Agentforce (Atlas)",
+    "icon": "🤖",
+    "default": true,
+    "required": false,
+    "description": "Atlas Reasoning Engine, Topics, Invocable Actions, Trust Layer & Agent API",
+    "phonetics": {
+      "agent force": "Agentforce",
+      "atlas engine": "Atlas Reasoning Engine",
+      "topic": "Topic",
+      "invocable": "@InvocableMethod",
+      "prompt template": "Prompt Template",
+      "models api": "Models API",
+      "agent api": "Agent API"
+    },
+    "instructions": "Agentforce: Expert in Atlas Reasoning Engine (ReAct loop: Reason, Act, Observe), Topics (classification boundaries), Invocable Apex Actions (@InvocableMethod), Prompt Builder grounding, Einstein Trust Layer data masking, and Agentforce DX."
+  },
+  {
+    "id": "data-cloud",
+    "name": "Data Cloud",
+    "icon": "☁️",
+    "default": false,
+    "required": false,
+    "description": "Customer 360, Data Streams, DLO, DMO (__dlm), Identity Resolution & Zero Copy",
+    "phonetics": {
+      "data cloud": "Data Cloud",
+      "dmo": "DMO (__dlm)",
+      "dlo": "DLO",
+      "identity resolution": "Identity Resolution",
+      "calculated inside": "Calculated Insights",
+      "zero copy": "Zero Copy",
+      "data stream": "Data Stream",
+      "data graph": "Data Graph"
+    },
+    "instructions": "Data Cloud: Expert in Data Streams (ingestion), Data Lake Objects (DLOs), standard Data Model Objects (DMOs ending in `__dlm`), Unified Individual identity resolution (match/reconciliation rules), Calculated Insights, Vector search/RAG, and Zero Copy federation with Snowflake/BigQuery."
+  },
+  {
+    "id": "sales",
+    "name": "Sales Cloud",
+    "icon": "💼",
+    "default": false,
+    "required": false,
+    "description": "Leads, Opportunities, Pipeline, Forecasting, Products, CPQ & Territory Mgmt",
+    "phonetics": {
+      "lead conversion": "Lead Conversion",
+      "price book": "Price Book",
+      "opportunity split": "Opportunity Splits",
+      "forecasting": "Collaborative Forecasting",
+      "territory management": "Enterprise Territory Management",
+      "cpq": "Salesforce CPQ"
+    },
+    "instructions": "Sales Cloud: Expert in Lead qualification and conversion lifecycle, Opportunity & Pipeline stages, Collaborative Forecasting, Products & Price Books, Opportunity Splits, Enterprise Territory Management, and Sales Engagement."
+  },
+  {
+    "id": "service",
+    "name": "Service Cloud",
+    "icon": "🎧",
+    "default": false,
+    "required": false,
+    "description": "Cases, Omni-Channel, Entitlements/Milestones, Knowledge & Service Console",
+    "phonetics": {
+      "omni channel": "Omni-Channel",
+      "entitlement": "Entitlement & Milestones",
+      "service console": "Service Console",
+      "knowledge article": "Knowledge Article",
+      "live agent": "Live Agent / Chat",
+      "escalation rule": "Escalation Rules"
+    },
+    "instructions": "Service Cloud: Expert in Case lifecycle, Omni-Channel presence & queue/skills-based routing, Entitlements and SLA Milestones, Knowledge base versioning, Service Console workspace tabs, and Macros."
+  },
+  {
+    "id": "experience",
+    "name": "Experience Cloud",
+    "icon": "🌐",
+    "default": false,
+    "required": false,
+    "description": "Digital Experiences (Communities), LWR, Customer/Partner Portals & Security",
+    "phonetics": {
+      "experience cloud": "Experience Cloud",
+      "digital experience": "Digital Experience",
+      "lwr": "LWR (Lightning Web Runtime)",
+      "experience builder": "Experience Builder",
+      "community user": "Experience Cloud User",
+      "guest user": "Guest User Profile"
+    },
+    "instructions": "Experience Cloud: Expert in Digital Experiences (Communities), Experience Builder layouts, LWR (Lightning Web Runtime) high-performance sites, Customer/Partner Portal user licenses, external sharing rules, and Guest User security policies."
+  },
+  {
+    "id": "fsl",
+    "name": "Field Service (FSL / SFS)",
+    "icon": "🔧",
+    "default": false,
+    "required": false,
+    "description": "Work Orders, Service Appointments, Dispatcher Console, Scheduling & Mobile",
+    "phonetics": {
+      "field service": "Field Service (FSL)",
+      "service appointment": "Service Appointment",
+      "work order": "Work Order",
+      "dispatcher console": "Dispatcher Console",
+      "service resource": "Service Resource",
+      "service territory": "Service Territory",
+      "operating hours": "Operating Hours"
+    },
+    "instructions": "Field Service (FSL / SFS): Expert in Work Orders, Work Order Line Items, Service Appointments, Service Territories, Operating Hours, Service Resources (Skills/Absences), Dispatcher Console Gantt view, Dynamic Scheduling & Optimization policies, and Offline Mobile flows."
+  },
+  {
+    "id": "omnistudio",
+    "name": "OmniStudio",
+    "icon": "🎨",
+    "default": false,
+    "required": false,
+    "description": "OmniScripts, FlexCards, Data Mappers (DataRaptor) & Integration Procedures",
+    "phonetics": {
+      "omni studio": "OmniStudio",
+      "omni script": "OmniScript",
+      "data raptor": "DataRaptor / Data Mapper",
+      "flex card": "FlexCard",
+      "integration procedure": "Integration Procedure (IP)",
+      "calculation matrix": "Calculation Matrix",
+      "vip": "Vlocity / OmniStudio Integration Procedure"
+    },
+    "instructions": "OmniStudio: Expert in guided user flows (OmniScripts), contextual micro-UIs (FlexCards), backend data transformations (Data Mappers / DataRaptors: Extract, Load, Transform, Turbo), server-side orchestration (Integration Procedures / IPs with caching), and Calculation Matrices/Procedures."
+  },
+  {
+    "id": "marketing",
+    "name": "Marketing Cloud (SFMC)",
+    "icon": "📈",
+    "default": false,
+    "required": false,
+    "description": "Journey Builder, Automation Studio, Data Extensions, AMPscript & Contact Builder",
+    "phonetics": {
+      "journey builder": "Journey Builder",
+      "data extension": "Data Extension",
+      "amp script": "AMPscript",
+      "automation studio": "Automation Studio",
+      "contact builder": "Contact Builder",
+      "content builder": "Content Builder",
+      "ssjs": "Server-Side JavaScript (SSJS)"
+    },
+    "instructions": "Marketing Cloud (SFMC): Expert in multi-channel customer journeys (Journey Builder), batch data processing (Automation Studio SQL queries), data architecture (Data Extensions, Contact Builder Data Designer), dynamic email rendering (AMPscript, SSJS), and Marketing Cloud Connect sync."
+  }
+]
