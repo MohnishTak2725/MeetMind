@@ -1407,7 +1407,7 @@
     availableSalesforceClouds.forEach(c => {
       if (selectedCloudIds.has(c.id)) names.push(c.name.split(' ')[0]);
     });
-    const summary = '⚡ SF: ' + (names.slice(0, 3).join('+')) + (names.length > 3 ? '...' : '');
+    const summary = 'SF: ' + (names.slice(0, 3).join('+')) + (names.length > 3 ? '...' : '');
     fetch('/api/skills/active', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

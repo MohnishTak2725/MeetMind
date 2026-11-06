@@ -291,12 +291,16 @@ Write-Host "`n--- SCENARIO 12: Stealth HUD Header & Close Utility ---" -Foregrou
 $hudScript = Get-Content -Raw "stealth-hud.ps1"
 $hasCloseRightDock = $hudScript.Contains('DockPanel.Dock="Right"')
 $hasSkillEllipsis = $hudScript.Contains('TextTrimming="CharacterEllipsis"')
-$hasSkillMaxWidth = $hudScript.Contains('MaxWidth="140"')
+$hasSkillMaxWidth = $hudScript.Contains('MaxWidth="150"')
 $hasWebBtn = $hudScript.Contains('Name="WebBtn"') -and $hudScript.Contains('Start-Process "http://localhost:3000/"')
+$hasCleanAsciiClose = $hudScript.Contains('Name="CloseBtn" Content="X"')
+$hasCleanShield = $hudScript.Contains('Text="SHIELD"')
 Assert-Test -Scenario "HUD Layout" -TestName "Close utility anchored to right edge via DockPanel" -Condition $hasCloseRightDock
 Assert-Test -Scenario "HUD Layout" -TestName "SkillBadgeText trims with ellipsis on long cloud names" -Condition $hasSkillEllipsis
 Assert-Test -Scenario "HUD Layout" -TestName "SkillBadgeBorder has MaxWidth protection" -Condition $hasSkillMaxWidth
 Assert-Test -Scenario "HUD Layout" -TestName "WebBtn present to launch browser from HUD" -Condition $hasWebBtn
+Assert-Test -Scenario "HUD Layout" -TestName "Close button uses clean ASCII X without mojibake" -Condition $hasCleanAsciiClose
+Assert-Test -Scenario "HUD Layout" -TestName "Shield badge uses clean text without mojibake" -Condition $hasCleanShield
 
 # -----------------------------------------------------------------------------
 # SCENARIO 13: Overflow Scrollers & Responsiveness in index.html

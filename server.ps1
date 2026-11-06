@@ -1,4 +1,4 @@
-# MeetMind Local Server with Stealth Bridge API
+﻿# MeetMind Local Server with Stealth Bridge API
 $port = 3000
 $prefix = "http://localhost:$port/"
 $listener = New-Object System.Net.HttpListener
@@ -23,7 +23,7 @@ $dir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $feedItems = [System.Collections.ArrayList]::Synchronized([System.Collections.ArrayList]::new())
 $askQueue = [System.Collections.ArrayList]::Synchronized([System.Collections.ArrayList]::new())
 $activeSkillId = "salesforce"
-$activeSkillLabel = "⚡ Salesforce: Core + Agentforce"
+$activeSkillLabel = "SF: Core + Agentforce"
 
 while ($listener.IsListening) {
     try {
@@ -102,7 +102,8 @@ while ($listener.IsListening) {
             }
 
             if ($request.HttpMethod -eq "POST") {
-                $reader = New-Object System.IO.StreamReader($request.InputStream, $request.ContentEncoding)
+                $enc = if ($request.ContentEncoding) { $request.ContentEncoding } else { [System.Text.Encoding]::UTF8 }
+                $reader = New-Object System.IO.StreamReader($request.InputStream, $enc)
                 $body = $reader.ReadToEnd()
                 $reader.Close()
                 if ($body) {
@@ -140,7 +141,8 @@ while ($listener.IsListening) {
             }
 
             if ($request.HttpMethod -eq "POST") {
-                $reader = New-Object System.IO.StreamReader($request.InputStream, $request.ContentEncoding)
+                $enc = if ($request.ContentEncoding) { $request.ContentEncoding } else { [System.Text.Encoding]::UTF8 }
+                $reader = New-Object System.IO.StreamReader($request.InputStream, $enc)
                 $body = $reader.ReadToEnd()
                 $reader.Close()
                 if ($body) {
@@ -176,7 +178,8 @@ while ($listener.IsListening) {
             $response.ContentType = "application/json; charset=utf-8"
             $response.Headers.Add("Access-Control-Allow-Origin", "*")
             if ($request.HttpMethod -eq "POST") {
-                $reader = New-Object System.IO.StreamReader($request.InputStream, $request.ContentEncoding)
+                $enc = if ($request.ContentEncoding) { $request.ContentEncoding } else { [System.Text.Encoding]::UTF8 }
+                $reader = New-Object System.IO.StreamReader($request.InputStream, $enc)
                 $body = $reader.ReadToEnd()
                 $reader.Close()
                 if ($body) {

@@ -1,4 +1,4 @@
-# MeetMind Native WPF Stealth HUD
+﻿# MeetMind Native WPF Stealth HUD
 # Creates a native Windows window with WDA_EXCLUDEFROMCAPTURE (0x00000011) and HWND_TOPMOST.
 # Because this process owns the window, Windows allows display affinity without ERROR_ACCESS_DENIED.
 
@@ -123,7 +123,7 @@ $xaml = @"
                 <DockPanel Margin="10,0,8,0" LastChildFill="True">
                     <!-- Right Utility Controls: Anchored to right edge, never clipped or pushed off -->
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Name="WebBtn" Content="🌐 Web" Width="48" Height="24" Background="#206378FF" Foreground="#93C5FD" BorderThickness="1" BorderBrush="#406378FF" Margin="0,0,5,0" Cursor="Hand" FontWeight="SemiBold" FontSize="10" ToolTip="Open MeetMind Web App in Browser (http://localhost:3000)"/>
+                        <Button Name="WebBtn" Content="Web ↗" Width="52" Height="24" Background="#206378FF" Foreground="#93C5FD" BorderThickness="1" BorderBrush="#406378FF" Margin="0,0,5,0" Cursor="Hand" FontWeight="Bold" FontSize="11" ToolTip="Open MeetMind Web App in Browser (http://localhost:3000)"/>
                         <ComboBox Name="OpacityCombo" Width="60" Height="24" FontSize="11" Background="#20FFFFFF" Foreground="#FFFFFF" Margin="0,0,5,0" VerticalContentAlignment="Center" ToolTip="HUD Transparency">
                             <ComboBoxItem Content="100%"/>
                             <ComboBoxItem Content="85%" IsSelected="True"/>
@@ -131,17 +131,17 @@ $xaml = @"
                             <ComboBoxItem Content="50%"/>
                         </ComboBox>
                         <Button Name="FontBtn" Content="A+" Width="26" Height="24" Background="#20FFFFFF" Foreground="#CBD5E1" BorderThickness="0" Margin="0,0,4,0" Cursor="Hand" FontWeight="Bold" FontSize="11" ToolTip="Toggle Large Text"/>
-                        <Button Name="CloseBtn" Content="✕" Width="26" Height="24" Background="#D5EF4444" Foreground="#FFFFFF" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="13" ToolTip="Close Stealth HUD"/>
+                        <Button Name="CloseBtn" Content="X" Width="26" Height="24" Background="#D5EF4444" Foreground="#FFFFFF" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="12" ToolTip="Close Stealth HUD (Esc)"/>
                     </StackPanel>
 
                     <!-- Left Branding & Dynamic Cloud Badge: Truncates with ellipsis if long -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" ClipToBounds="True">
                         <TextBlock Text="MeetMind" Foreground="#FFFFFF" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
-                        <Border Background="#2010B981" CornerRadius="8" Padding="4,2" Margin="5,0,0,0" BorderBrush="#4010B981" BorderThickness="1" VerticalAlignment="Center" ToolTip="Invisible to Screen Sharing">
-                            <TextBlock Text="🛡️" Foreground="#34D399" FontSize="10"/>
+                        <Border Background="#2010B981" CornerRadius="6" Padding="5,1" Margin="6,0,0,0" BorderBrush="#4010B981" BorderThickness="1" VerticalAlignment="Center" ToolTip="Invisible to Screen Sharing">
+                            <TextBlock Text="SHIELD" Foreground="#34D399" FontSize="9.5" FontWeight="Bold"/>
                         </Border>
-                        <Border Name="SkillBadgeBorder" Background="#206378FF" CornerRadius="8" Padding="5,2" Margin="6,0,6,0" BorderBrush="#406378FF" BorderThickness="1" VerticalAlignment="Center" MaxWidth="140">
-                            <TextBlock Name="SkillBadgeText" Text="⚡ Salesforce" Foreground="#93C5FD" FontSize="10" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                        <Border Name="SkillBadgeBorder" Background="#206378FF" CornerRadius="6" Padding="6,2" Margin="6,0,6,0" BorderBrush="#406378FF" BorderThickness="1" VerticalAlignment="Center" MaxWidth="150">
+                            <TextBlock Name="SkillBadgeText" Text="SF: Salesforce" Foreground="#93C5FD" FontSize="10.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                         </Border>
                     </StackPanel>
                 </DockPanel>
@@ -344,11 +344,11 @@ $feedTimer.Add_Tick({
             if ($sRes) {
                 $lbl = if ($sRes.activeLabel) { $sRes.activeLabel } else {
                     switch ($sRes.activeSkillId) {
-                        "salesforce"     { "⚡ Salesforce" }
-                        "system-design"  { "🏗️ System Design" }
-                        "fullstack"      { "💻 Full-Stack" }
-                        "general"        { "🎯 General" }
-                        default          { "⚡ " + $sRes.activeSkillId }
+                        "salesforce"     { "SF: Core + Agentforce" }
+                        "system-design"  { "System Design" }
+                        "fullstack"      { "Full-Stack" }
+                        "general"        { "General" }
+                        default          { "SF: " + $sRes.activeSkillId }
                     }
                 }
                 if ($skillBadgeText.Text -ne $lbl) {
