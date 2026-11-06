@@ -112,13 +112,13 @@ while ($listener.IsListening) {
                         if ($data.activeLabel) { $activeSkillLabel = $data.activeLabel }
                     } catch {}
                 }
-                $json = @{ status = "ok"; activeSkillId = $activeSkillId; activeLabel = $activeSkillLabel } | ConvertTo-Json -Compress
+                $json = @{ status = "ok"; success = $true; activeSkillId = $activeSkillId; activeLabel = $activeSkillLabel } | ConvertTo-Json -Compress
                 $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
                 $response.OutputStream.Write($bytes, 0, $bytes.Length)
                 $response.Close()
                 continue
             } else {
-                $json = @{ activeSkillId = $activeSkillId; activeLabel = $activeSkillLabel } | ConvertTo-Json -Compress
+                $json = @{ status = "ok"; success = $true; activeSkillId = $activeSkillId; activeLabel = $activeSkillLabel } | ConvertTo-Json -Compress
                 $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
                 $response.OutputStream.Write($bytes, 0, $bytes.Length)
                 $response.Close()
@@ -126,8 +126,8 @@ while ($listener.IsListening) {
             }
         }
 
-        # API: /api/feed (GET to read feed, POST to publish items)
-        if ($urlPath -eq "/api/feed") {
+        # API: /api/feed or /api/answers (GET to read feed, POST to publish items)
+        if ($urlPath -eq "/api/feed" -or $urlPath -eq "/api/answers") {
             $response.ContentType = "application/json; charset=utf-8"
             $response.Headers.Add("Access-Control-Allow-Origin", "*")
             $response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
