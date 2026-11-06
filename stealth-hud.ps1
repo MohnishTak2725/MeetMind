@@ -261,11 +261,6 @@ $win.Add_KeyDown({
 })
 
 $win.Add_Closed({
-    try {
-        Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'server.ps1' } | ForEach-Object {
-            Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
-        }
-    } catch {}
     [System.Windows.Application]::Current.Shutdown()
     Stop-Process -Id $PID -Force
 })
