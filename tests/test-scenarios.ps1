@@ -383,6 +383,71 @@ $hasAudioResumeContext = $indexHtml.Contains("CANDIDATE RESUME & PROJECTS CONTEX
 Assert-Test -Scenario "Resume Grounding" -TestName "Interviewer audio pipeline incorporates resume context" -Condition $hasAudioResumeContext
 
 # -----------------------------------------------------------------------------
+# SCENARIO 15: Exhaustive Interactive Controls & Button Wiring Audit
+# -----------------------------------------------------------------------------
+Write-Host "`n--- SCENARIO 15: Interactive Controls & Button Wiring ---" -ForegroundColor Magenta
+
+# 1. Verify every function called by onclick exists in JavaScript
+$onclickFns = @(
+    "askManual", "clearAnswers", "clearTranscript", "copyTranscript",
+    "removeUploadedResume", "resetCloudsDefault", "saveApiKeyPrompt",
+    "saveSettings", "simulateDemoQuestion", "simulateVoiceInterviewer",
+    "testAndRefreshModels", "testMicVolume", "toggleCloudsDropdown",
+    "toggleGhostMode", "toggleListening", "toggleMeetingAudioCapture",
+    "togglePipHUD", "toggleResumePreview", "toggleSettings", "toggleStealthModal"
+)
+$missingFns = @()
+foreach ($fn in $onclickFns) {
+    if (-not ($indexHtml.Contains("function $fn") -or $indexHtml.Contains("$fn ="))) {
+        $missingFns += $fn
+    }
+}
+Assert-Test -Scenario "Interactive Audit" -TestName "All 20 primary onclick JavaScript functions exist" -Condition ($missingFns.Count -eq 0) -Details "Missing: $($missingFns -join ', ')"
+
+# 2. Verify all Main Web App action buttons have wiring
+$hasMicControl = $indexHtml.Contains('id="micBtn" title="Toggle Your Microphone" onclick="toggleListening()"')
+$hasTeamsControl = $indexHtml.Contains('id="teamsAudioBtn"') -and $indexHtml.Contains('onclick="toggleMeetingAudioCapture()"')
+$hasGhostToggle = $indexHtml.Contains('id="ghostToggle"') -and $indexHtml.Contains('onclick="toggleGhostMode()"')
+$hasStealthGuide = $indexHtml.Contains('id="stealthGuideToggle"') -and $indexHtml.Contains('onclick="toggleStealthModal()"')
+$hasSettingsToggle = $indexHtml.Contains('id="settingsToggle"') -and $indexHtml.Contains('onclick="toggleSettings()"')
+$hasPipButton = $indexHtml.Contains('id="pipBtn"') -and $indexHtml.Contains('onclick="togglePipHUD()"')
+$hasAskManual = $indexHtml.Contains('id="askBtn"') -and $indexHtml.Contains('onclick="askManual()"')
+Assert-Test -Scenario "Interactive Audit" -TestName "Main app primary controls wired (Mic, Teams Audio, HUD, Settings, Ghost, Ask)" -Condition ($hasMicControl -and $hasTeamsControl -and $hasGhostToggle -and $hasStealthGuide -and $hasSettingsToggle -and $hasPipButton -and $hasAskManual)
+
+# 3. Verify all Diagnostic and Testing tools are wired
+$hasTestVoice = $indexHtml.Contains('onclick="simulateVoiceInterviewer()"')
+$hasTestMic = $indexHtml.Contains('onclick="testMicVolume()"')
+$hasTestDemo = $indexHtml.Contains('onclick="simulateDemoQuestion()"')
+$hasTestKey = $indexHtml.Contains('onclick="testAndRefreshModels()"')
+Assert-Test -Scenario "Interactive Audit" -TestName "Diagnostic and simulation buttons wired (Voice, Mic, Demo, Key Test)" -Condition ($hasTestVoice -and $hasTestMic -and $hasTestDemo -and $hasTestKey)
+
+# 4. Verify all Clipboard and Content actions are wired
+$hasCopyTranscript = $indexHtml.Contains('onclick="copyTranscript()"')
+$hasClearTranscript = $indexHtml.Contains('onclick="clearTranscript()"')
+$hasClearAnswers = $indexHtml.Contains('onclick="clearAnswers()"')
+$hasCopySnippet = $indexHtml.Contains('function copySnippet')
+$hasCopyAnswer = $indexHtml.Contains('function copyAnswer')
+Assert-Test -Scenario "Interactive Audit" -TestName "Clipboard and clear operations wired (Copy Transcript, Copy Answer, Copy Code, Clear)" -Condition ($hasCopyTranscript -and $hasClearTranscript -and $hasClearAnswers -and $hasCopySnippet -and $hasCopyAnswer)
+
+# 5. Verify Stealth HUD (WPF) interactive controls
+$hasHudWeb = $hudScript.Contains('$webBtn.Add_Click')
+$hasHudClear = $hudScript.Contains('$clearBtn.Add_Click')
+$hasHudFont = $hudScript.Contains('$fontBtn.Add_Click')
+$hasHudClose = $hudScript.Contains('$closeBtn.Add_Click')
+$hasHudOpacity = $hudScript.Contains('$opacityCombo.Add_SelectionChanged')
+$hasHudTabs = $hudScript.Contains('$tabAnswers.Add_Click') -and $hudScript.Contains('$tabTranscript.Add_Click')
+$hasHudAsk = $hudScript.Contains('$askBtn.Add_Click') -and $hudScript.Contains('$askInput.Add_KeyDown')
+Assert-Test -Scenario "Interactive Audit" -TestName "All 7 Stealth HUD interactive controls fully wired" -Condition ($hasHudWeb -and $hasHudClear -and $hasHudFont -and $hasHudClose -and $hasHudOpacity -and $hasHudTabs -and $hasHudAsk)
+
+# 6. Verify Browser PiP HUD interactive controls
+$hasPipFont = $indexHtml.Contains('fontBtn.addEventListener(''click''')
+$hasPipClear = $indexHtml.Contains('doc.getElementById(''hudClearBtn'')')
+$hasPipDock = $indexHtml.Contains('doc.getElementById(''hudDockBtn'')')
+$hasPipTabs = $indexHtml.Contains('tabAnswersBtn.addEventListener(''click''') -and $indexHtml.Contains('tabTranscriptBtn.addEventListener(''click''')
+$hasPipAsk = $indexHtml.Contains('askBtn.addEventListener(''click''')
+Assert-Test -Scenario "Interactive Audit" -TestName "All 5 Browser PiP HUD interactive controls fully wired" -Condition ($hasPipFont -and $hasPipClear -and $hasPipDock -and $hasPipTabs -and $hasPipAsk)
+
+# -----------------------------------------------------------------------------
 # SUMMARY REPORT
 # -----------------------------------------------------------------------------
 Write-Host "`n==========================================================" -ForegroundColor Cyan
