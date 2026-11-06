@@ -208,5 +208,321 @@
       "subscriber key": "Subscriber Key"
     },
     "instructions": "Marketing Cloud (SFMC): Official Marketing Cloud Architecture & Standards.\n- Data Architecture: Standard, Filtered, and Sendable Data Extensions, All Subscribers list, Subscriber Key primary identifier, Contact Builder Data Designer (1:1, 1:N, N:N cardinality).\n- Journey Builder: Real-time, event-triggered customer journeys. Entry Sources (Data Extension, API Event, Salesforce Data Event via MC Connect, CloudPages Form), Decision Splits, Engagement Splits, Wait Activities, and Exit Criteria.\n- Automation Studio: Scheduled multi-step batch processing engine. Activities include SQL Query Activities (T-SQL queries), Import File, File Transfer, Data Extract, and Send Email.\n- Scripting & Personalization: AMPscript (server-side language for emails, landing pages, SMS using Lookup(), LookupRows(), v(), RowCount()), Server-Side JavaScript (SSJS for complex array handling and API calls), and CloudPages.\n- Marketing Cloud Connect: Syncs CRM Contacts, Leads, Accounts, and custom objects into Synchronized Data Extensions via the Streaming API."
+  },
+  {
+    "id": "commerce",
+    "name": "Commerce Cloud (B2B & D2C)",
+    "icon": "🛍️",
+    "default": false,
+    "required": false,
+    "description": "B2B/D2C on Core, Storefronts, Cart, Checkout, Order Summary & SCAPI",
+    "officialDataModels": ["WebStore", "ProductCatalog", "ProductCategory", "ElectronicMediaGroup", "WebCart", "CartItem", "OrderSummary", "OrderItemSummary", "BuyerGroup", "BuyerAccount"],
+    "architecturalStandards": "LWR Storefront Architecture, Cart & Checkout Execution Flow, Asynchronous Apex Checkout Integrations (Tax, Shipping, Payment Gateway), Headless SCAPI",
+    "phonetics": {
+      "commerce cloud": "Commerce Cloud",
+      "b2b commerce": "B2B Commerce",
+      "d2c commerce": "D2C Commerce",
+      "web cart": "WebCart",
+      "order summary": "OrderSummary",
+      "buyer group": "Buyer Group",
+      "buyer account": "Buyer Account",
+      "scapi": "SCAPI (Salesforce Commerce API)",
+      "checkout flow": "Checkout Flow"
+    },
+    "instructions": "Commerce Cloud (B2B & D2C on Core): Official Salesforce Commerce Architecture.\n- Storefronts: Built natively on the Core Platform with Lightning Web Runtime (LWR) for high-speed edge delivery or Headless via Salesforce Commerce API (SCAPI).\n- Product Data Model: WebStore, ProductCatalog, ProductCategory, Standard/Custom Pricebook2, BuyerGroup (bundles BuyerAccounts, Pricebooks, Entitlement Policies, and Promotions).\n- Cart & Checkout: WebCart, CartItem, CartDeliveryGroup. Checkout Flows integrate modular Apex checkout subflows via asynchronous Checkout API interfaces: Tax Calculation (sfdc_checkout.CartTaxCalculations), Shipping Calculation (sfdc_checkout.CartShippingCharges), and Payment Gateway Adapter (sfdc_checkout.PaymentGatewayAdapter).\n- Order Management (SOM): Transition from WebCart to Order, then OrderSummary, OrderItemSummary, OrderDeliveryGroupSummary, and FulfillmentOrder with automated state machine processing."
+  },
+  {
+    "id": "b2c-commerce",
+    "name": "B2C Commerce (SFCC / Demandware)",
+    "icon": "🛒",
+    "default": false,
+    "required": false,
+    "description": "SFRA, OCAPI, SCAPI, Page Designer, Business Manager & Cartridges",
+    "officialDataModels": ["Site", "Catalog", "Category", "Product", "Basket", "Order", "Customer", "Promotion", "Slot", "ContentAsset"],
+    "architecturalStandards": "Storefront Reference Architecture (SFRA), Open Commerce API (OCAPI), SCAPI, Cartridge Hierarchy, Server-side JavaScript Controllers, dw.* Script API",
+    "phonetics": {
+      "demandware": "Salesforce B2C Commerce (Demandware)",
+      "sfra": "SFRA (Storefront Reference Architecture)",
+      "ocapi": "OCAPI (Open Commerce API)",
+      "cartridge": "SFCC Cartridge",
+      "business manager": "Business Manager (SFCC)",
+      "page designer": "Page Designer",
+      "pipe line": "SFCC Pipeline / Controller",
+      "isml": "ISML Template"
+    },
+    "instructions": "B2C Commerce Cloud (SFCC / Demandware): Official SFCC Enterprise Architecture.\n- Framework & Architecture: Storefront Reference Architecture (SFRA) MVC pattern (Models, Views, Controllers). Cartridge Path resolution order where higher-order cartridges override base cartridges (`app_storefront_base`).\n- Server Scripting: JavaScript Controllers (`server.get()`, `server.post()`), Middleware chains, ISML (Information Storage Markup Language) templating, and native `dw.*` Script APIs (`dw.order.BasketMgr`, `dw.catalog.ProductMgr`, `dw.customer.CustomerMgr`).\n- APIs & Headless: SCAPI (Salesforce Commerce API) REST endpoints for headless commerce; OCAPI (Open Commerce API - Shop and Data APIs) with granular client ID authorization and hook extensions.\n- Merchandising & CMS: Business Manager, Page Designer custom components, Content Slots, Source Codes, and Dynamic Price Books."
+  },
+  {
+    "id": "automotive",
+    "name": "Automotive Cloud",
+    "icon": "🚗",
+    "default": false,
+    "required": false,
+    "description": "Vehicle, Asset, Fleet, Telematics Data Cloud, Claims, Warranties & Dealer Mgmt",
+    "officialDataModels": ["Vehicle", "Asset", "VehicleDefinition", "Fleet", "UnitOfMeasure", "PartyRoleRelation", "Claim", "WarrantyTerm", "ProductWarrantyTerm", "FaultCode"],
+    "architecturalStandards": "Automotive Data Model, Connected Vehicle Telematics Ingestion (Data Cloud), Dealer Management System (DMS) Integration, Vehicle Lifecycle Management",
+    "phonetics": {
+      "automotive cloud": "Automotive Cloud",
+      "vehicle definition": "Vehicle Definition",
+      "telematics": "Connected Vehicle Telematics",
+      "fault code": "Fault Code",
+      "warranty claim": "Warranty Claim",
+      "dealer console": "Automotive Dealer Console",
+      "fleet management": "Fleet Management"
+    },
+    "instructions": "Automotive Cloud: Official Salesforce Automotive Architecture & Standards.\n- Vehicle Lifecycle: Vehicle (VIN, make, model, odometer, transmission, engine), VehicleDefinition (specifications, trim levels, parts catalog), Asset hierarchy, and Fleet tracking.\n- Connected Vehicle & Telematics: Real-time telemetry ingestion via Data Cloud Data Streams (speed, engine temperature, battery health, DTC fault codes) driving proactive Agentforce service alerts.\n- Customer & Stakeholder Network: PartyRoleRelation modeling multi-party relationships across Owners, Drivers, Dealers, Financiers, and Insurers.\n- Warranties & Claims: WarrantyTerm, ProductWarrantyTerm, FaultCode, Claim, and ClaimCoverage with automated adjudication rules and reimbursement settlement flows."
+  },
+  {
+    "id": "certinia-psa",
+    "name": "Certinia PSA (PS Cloud)",
+    "icon": "💼",
+    "default": false,
+    "required": false,
+    "description": "Projects, Milestones, Resource Requests, Assignments, Time/Expense, Actuals & Billing",
+    "officialDataModels": ["pse__Proj__c", "pse__Milestone__c", "pse__Resource_Request__c", "pse__Assignment__c", "pse__Schedule__c", "pse__Timecard_Header__c", "pse__Expense_Report__c", "pse__Billing_Event__c", "pse__Transaction__c", "pse__Permission_Control__c"],
+    "architecturalStandards": "RPG Hierarchy (Region, Practice, Group), 3-Layer Access Control (Licenses, Perm Sets, Permission Controls), Transaction/Actuals Ledger, Billing Event Generation",
+    "phonetics": {
+      "certinia": "Certinia (FinancialForce)",
+      "psa": "Certinia PSA",
+      "resource request": "Resource Request (pse__Resource_Request__c)",
+      "timecard": "Timecard (pse__Timecard_Header__c)",
+      "billing event": "Billing Event (pse__Billing_Event__c)",
+      "rpg": "Region, Practice, Group (RPG Hierarchy)",
+      "permission control": "Permission Control (pse__Permission_Control__c)",
+      "intelligent staffing": "Intelligent Staffing",
+      "resource optimizer": "Resource Optimizer",
+      "actuals": "Certinia Transactions / Actuals"
+    },
+    "instructions": "Certinia PSA (PS Cloud): Official Architecture & Enterprise Best Practices.\n- Organizational Structure: 4 RPG Objects (Region, Practice, Group) organizing resources, projects, and rate cards. Time Periods (Annual, Quarterly, Monthly, Weekly) for financials and forecasting.\n- 3-Layer Access Control: (1) Package Licenses (Certinia PSA), (2) Permission Sets (standard/custom personas), (3) Permission Controls (granular record-level overrides for Staffing, Timecard Approval, Expense Approval, Invoicing, Billing).\n- Resource Management: Resource Requests (`pse__Resource_Request__c`), Intelligent Staffing, Resource Optimizer, Work Opportunities Hub. Assignments (`pse__Assignment__c`) with Schedules (`pse__Schedule__c`) defining daily billable/non-billable hours.\n- Project Management: Projects (`pse__Proj__c`), Milestones (`pse__Milestone__c`), Project Tasks, baseline tracking, and EVA (Earned Value Analysis).\n- Financial Engine: Timecards (`pse__Timecard_Header__c`) and Expense Reports (`pse__Expense_Report__c`) post to Transactions (`pse__Transaction__c`) and update Actuals. Billing Event Generation creates `pse__Billing_Event__c` records ready for invoicing and ERP/FFA integration.\n- Backlog & Utilization: Historical and scheduled utilization calculations across billable, creditable, and non-billable time classifications."
+  },
+  {
+    "id": "certinia-services-cpq",
+    "name": "Certinia Services CPQ / Estimator",
+    "icon": "📐",
+    "default": false,
+    "required": false,
+    "description": "Pre-sales Services Estimates, Rate Cards, Margin Modeling, SOW & PSA Handoff",
+    "officialDataModels": ["pse__Estimate__c", "pse__Estimate_Product__c", "pse__Estimate_Task__c", "pse__Rate_Card__c", "pse__Role_Request__c"],
+    "architecturalStandards": "Pre-Sales Scoping & Margin Engineering, Multi-Currency Rate Modeling, Direct Opportunity-to-Estimate Integration, Automated Project Handoff into PSA",
+    "phonetics": {
+      "services cpq": "Certinia Services CPQ",
+      "services estimator": "Certinia Services Estimator",
+      "estimate": "Certinia Estimate (pse__Estimate__c)",
+      "rate card": "PSA Rate Card",
+      "margin modeling": "Margin Modeling",
+      "sow generation": "SOW Generation"
+    },
+    "instructions": "Certinia Services CPQ / Estimator: Official Pre-Sales Architecture.\n- Scoping & Estimation: Estimates (`pse__Estimate__c`) linked directly to Opportunities, defining service deliverable templates, milestone schedules, and task decompositions.\n- Pricing & Margin Engineering: Role Requests (`pse__Role_Request__c`) and Rate Cards (`pse__Rate_Card__c`) dynamically calculating cost rates, bill rates, target margins, discounts, and blended hourly rates.\n- SOW & Quote Generation: Seamless export of structured deliverable timelines and milestone payment terms into customer-facing Statements of Work (SOW).\n- PSA Handoff: One-click handoff converting approved pre-sales Estimates into production PSA Projects (`pse__Proj__c`), creating initial Milestones, Budgets, and unheld Resource Requests automatically."
+  },
+  {
+    "id": "certinia-accounting",
+    "name": "Certinia Accounting (FFA)",
+    "icon": "💰",
+    "default": false,
+    "required": false,
+    "description": "General Ledger, Accounts Receivable/Payable, Invoicing, Cash Matching & Journals",
+    "officialDataModels": ["codaCompany__c", "codaPeriod__c", "codaInvoice__c", "codaInvoiceLineItem__c", "codaPurchaseInvoice__c", "codaCashEntry__c", "codaJournal__c", "codaGeneralLedgerAccount__c"],
+    "architecturalStandards": "Double-Entry Bookkeeping Ledger on Salesforce, Multi-Company & Multi-Currency Architecture, Automated Billing Event-to-Invoice Integration, Revenue Recognition",
+    "phonetics": {
+      "financialforce accounting": "Certinia Accounting (FFA)",
+      "general ledger": "General Ledger (codaGeneralLedgerAccount__c)",
+      "sales invoice": "Sales Invoice (codaInvoice__c)",
+      "payable invoice": "Purchase Invoice (codaPurchaseInvoice__c)",
+      "cash entry": "Cash Entry (codaCashEntry__c)",
+      "cash matching": "Cash Matching",
+      "journal entry": "Journal Entry (codaJournal__c)",
+      "intercompany": "Intercompany Transfers"
+    },
+    "instructions": "Certinia Accounting (FinancialForce FFA): Official Financial Architecture.\n- Multi-Company Structure: Virtual companies (`codaCompany__c`), multi-currency ledgers, intercompany transactions with automated balancing journal entries.\n- Accounts Receivable (AR): Sales Invoices (`codaInvoice__c`) and Credit Notes. Direct programmatic transformation from PSA Billing Events (`pse__Billing_Event__c`) to Sales Invoices via `pse.APIBillingService`.\n- Accounts Payable (AP): Purchase Invoices (`codaPurchaseInvoice__c`), matching Purchase Orders, and vendor payment disbursement.\n- Cash Matching & Banking: Cash Entries (`codaCashEntry__c`), bank reconciliation, and automated cash matching algorithms clearing invoices against payments.\n- General Ledger: Chart of Accounts, Dimension 1-4 analysis tags, journal postings, and real-time trial balance reporting."
+  },
+  {
+    "id": "ncino",
+    "name": "nCino (Cloud Banking)",
+    "icon": "🏦",
+    "default": false,
+    "required": false,
+    "description": "Commercial & Retail Lending, Loan Origination (LOS), Collateral, Spreads & Credit",
+    "officialDataModels": ["LLC_BI__Product_Package__c", "LLC_BI__Loan__c", "LLC_BI__Collateral__c", "LLC_BI__Legal_Entities__c", "LLC_BI__Spread__c", "LLC_BI__Document_Store__c", "LLC_BI__Underwriting_Summary__c"],
+    "architecturalStandards": "nCino Bank Operating System (BOS), Commercial & Small Business Lending Lifecycle, Automated Spreading Engine, Credit Memo Generation & Underwriting Rules",
+    "phonetics": {
+      "ncino": "nCino Cloud Banking",
+      "product package": "Product Package (LLC_BI__Product_Package__c)",
+      "loan origination": "Loan Origination System (LOS)",
+      "collateral": "Collateral (LLC_BI__Collateral__c)",
+      "spreads": "Financial Spreading (LLC_BI__Spread__c)",
+      "credit memo": "Credit Memo Generation",
+      "entity involvement": "Entity Involvement",
+      "covenant": "Covenant Management"
+    },
+    "instructions": "nCino Cloud Banking: Official nCino Bank Operating System Architecture.\n- Product Package & Loans: Top-level deal container (`LLC_BI__Product_Package__c`) grouping multiple credit facilities (`LLC_BI__Loan__c`) for a relationship.\n- Entity Involvement: Borrowers, Co-Signers, Guarantors, and Beneficial Owners connected via `LLC_BI__Legal_Entities__c` to enforce Know Your Customer (KYC) and Anti-Money Laundering (AML).\n- Collateral Management: Pledged assets (`LLC_BI__Collateral__c`), lien positions, valuations, advance rates, and collateral-to-loan allocations.\n- Financial Spreading: Automated spreading engine (`LLC_BI__Spread__c`) capturing balance sheets, income statements, and cash flows to calculate DSCR, DTI, leverage, and liquidity ratios.\n- Credit Underwriting: Automated Decision Engine, Risk Rating matrices, Covenant tracking, Document Manager, and automated Credit Memo generation."
+  },
+  {
+    "id": "fsc",
+    "name": "Financial Services Cloud (FSC)",
+    "icon": "💳",
+    "default": false,
+    "required": false,
+    "description": "Wealth Mgmt, Retail Banking, Household/ARC Data Model, Compliant Data Sharing",
+    "officialDataModels": ["FinServ__FinancialAccount__c", "FinServ__FinancialHolding__c", "FinServ__AssetsAndLiabilities__c", "Account", "FinServ__FinancialGoal__c", "InteractionSummary", "FinServ__BillingStatement__c"],
+    "architecturalStandards": "Actionable Relationship Center (ARC), Household Group Model, Compliant Data Sharing (CDS) Object-Level Governance, Client 360 Wealth Management",
+    "phonetics": {
+      "financial services cloud": "Financial Services Cloud (FSC)",
+      "financial account": "Financial Account (FinServ__FinancialAccount__c)",
+      "arc": "Actionable Relationship Center (ARC)",
+      "household model": "FSC Household Model",
+      "compliant data sharing": "Compliant Data Sharing (CDS)",
+      "interaction summary": "Interaction Summary"
+    },
+    "instructions": "Financial Services Cloud (FSC): Official Financial Services Architecture.\n- Household Model: Person Account or Individual (Contact + Account) aggregated into Household Group Accounts with primary group flags and dynamic rollups.\n- Actionable Relationship Center (ARC): Interactive graphical tree visualizing complex legal entities, trusts, family members, and business affiliations.\n- Financial Accounts: Bank accounts, investment portfolios, insurance policies, and mortgages modeled in `FinServ__FinancialAccount__c` with rollups to Household total net worth.\n- Compliant Data Sharing (CDS): Granular participant-based sharing rules ensuring sensitive client financial data is restricted to authorized deal teams without altering OWD.\n- Interaction Summaries: Structured meeting note capture with integrated compliance review, participant assignment, and mobile sync."
+  },
+  {
+    "id": "health",
+    "name": "Health Cloud",
+    "icon": "🏥",
+    "default": false,
+    "required": false,
+    "description": "HL7 FHIR R4 Model, Care Plans, Clinical Data, EHR, Provider Directory & IDA",
+    "officialDataModels": ["CarePlan", "CareTeamMember", "EhrObservation", "EhrCondition", "EhrEncounter", "HealthcareProvider", "HealthcareFacility", "ClinicalImpression", "MedicationStatement"],
+    "architecturalStandards": "HL7 FHIR R4 Alignment, Patient 360 Architecture, Intelligent Document Automation (IDA), Health Cloud Provider Search & Credentialing",
+    "phonetics": {
+      "health cloud": "Health Cloud",
+      "care plan": "Care Plan (Health Cloud)",
+      "fhir": "HL7 FHIR R4 Standard",
+      "ehr": "Electronic Health Record (EHR)",
+      "provider search": "Healthcare Provider Search",
+      "intelligent document automation": "Intelligent Document Automation (IDA)"
+    },
+    "instructions": "Health Cloud: Official Healthcare & Life Sciences Architecture.\n- Clinical Data Model: Standard FHIR R4 aligned objects including EhrObservation, EhrCondition, EhrEncounter, MedicationStatement, and AllergyIntolerance.\n- Patient 360 & Care Plans: Unified Patient record (Person Account), customizable Care Plans (CarePlan object based on Case), Care Plan Templates, Goals, and CareTeamMembers.\n- Provider Management: Provider Directory (HealthcareProvider, HealthcareFacility, HealthcareProviderFacility), NPI tracking, specialty taxonomies, and sub-second Provider Search.\n- Intelligent Document Automation (IDA): OCR ingestion of faxes and medical records directly into patient charts using AWS Textract or Einstein Document Reader.\n- Compliance: HIPAA, HITRUST, Shield Platform Encryption, and Audit Trail integration."
+  },
+  {
+    "id": "manufacturing",
+    "name": "Manufacturing Cloud",
+    "icon": "🏭",
+    "default": false,
+    "required": false,
+    "description": "Sales Agreements, Account Forecasting, Rebates, Warranty Lifecycle & Asset Service",
+    "officialDataModels": ["SalesAgreement", "SalesAgreementProduct", "SalesAgreementProductSchedule", "AccountForecast", "AdvAccountForecastFact", "RebateProgram", "Claim", "WarrantyTerm"],
+    "architecturalStandards": "Run-Rate Runoff vs Spot Sales Modeling, Advanced Account Forecasting (Data Processing Engine), Volume Rebate Management, Asset & Warranty Service Lifecycle",
+    "phonetics": {
+      "manufacturing cloud": "Manufacturing Cloud",
+      "sales agreement": "Sales Agreement",
+      "account forecasting": "Advanced Account Forecasting",
+      "rebate management": "Rebate Management",
+      "data processing engine": "Data Processing Engine (DPE)"
+    },
+    "instructions": "Manufacturing Cloud: Official Manufacturing Cloud Architecture.\n- Sales Agreements: Long-term run-rate contract tracking (`SalesAgreement`, `SalesAgreementProduct`, `SalesAgreementProductSchedule`). Quantities and prices scheduled across multiple terms (monthly, quarterly), tracking Planned vs Actual vs Forecasted values.\n- Advanced Account Forecasting: Real-time, multi-dimensional forecast generation powered by Data Processing Engine (DPE) batch jobs incorporating sales agreements, pipeline opportunities, past orders, and market indicators.\n- Rebate Management: Volume-based and tier-based incentive programs (`RebateProgram`, `RebateProgramMember`) with automated payout calculations.\n- Warranty & Service Operations: Complete warranty tracking, claims capture, and replacement workflows for manufactured machinery and parts."
+  },
+  {
+    "id": "revenue-cloud",
+    "name": "Revenue Cloud (Billing & Subscriptions)",
+    "icon": "🧾",
+    "default": false,
+    "required": false,
+    "description": "Salesforce Billing, Invoicing, Payments, Credit/Debit Notes & RevRec (ASC 606)",
+    "officialDataModels": ["Order", "OrderItem", "blng__Invoice__c", "blng__InvoiceLine__c", "blng__Payment__c", "blng__CreditNote__c", "blng__DebitNote__c", "blng__RevenueSchedule__c", "blng__RevenueRecognitionTreatment__c"],
+    "architecturalStandards": "Quote-to-Revenue Architecture, Automated Invoice Schedulers, ASC 606 / IFRS 15 Revenue Recognition, Payment Gateway Integration, Usage-based Invoicing",
+    "phonetics": {
+      "revenue cloud": "Revenue Cloud",
+      "salesforce billing": "Salesforce Billing (blng__)",
+      "invoice run": "Invoice Scheduler / Invoice Run",
+      "revenue recognition": "Revenue Recognition (ASC 606)",
+      "credit note": "Credit Note (blng__CreditNote__c)",
+      "usage billing": "Usage-Based Billing"
+    },
+    "instructions": "Revenue Cloud (Salesforce Billing & Subscriptions): Official Architecture.\n- Order Execution: Contracted CPQ Orders activate into Billing-ready line items with Bill Through Dates, Billing Schedules, and Tax Treatments.\n- Invoicing: Automated Invoice Schedulers batch generate Invoices (`blng__Invoice__c`) and Invoice Lines. Supports Bill in Advance, Bill in Arrears, Milestones, and Usage rating.\n- Payments & Adjustments: Payment processing via Payment Gateway Adapters (Stripe, CyberSource), Payment Allocation, Credit Notes (`blng__CreditNote__c`), and Debit Notes.\n- Revenue Recognition: ASC 606 / IFRS 15 compliant Revenue Recognition Rules and Treatments creating Revenue Schedules (`blng__RevenueSchedule__c`) tracking amortized vs deferred revenue."
+  },
+  {
+    "id": "public-sector",
+    "name": "Public Sector Solutions (PSS)",
+    "icon": "🏛️",
+    "default": false,
+    "required": false,
+    "description": "Licensing & Permitting, Inspections, Grants, Benefit Management & BRE",
+    "officialDataModels": ["BusinessLicenseApplication", "IndividualApplication", "RegulatoryTransactionFee", "Inspection", "Violation", "BenefitProgram", "BenefitAssignment", "Case"],
+    "architecturalStandards": "OmniStudio Guided Citizen Portals, Business Rules Engine (BRE) Decision Matrix Architecture, Inspection & Enforcement Execution, Benefit Disbursement",
+    "phonetics": {
+      "public sector solutions": "Public Sector Solutions (PSS)",
+      "business license": "Business License Application",
+      "regulatory fee": "Regulatory Transaction Fee",
+      "business rules engine": "Business Rules Engine (BRE)",
+      "benefit management": "Benefit Management"
+    },
+    "instructions": "Public Sector Solutions (PSS / Government Cloud): Official Architecture.\n- Licensing & Permitting: Citizen self-service applications (BusinessLicenseApplication, IndividualApplication) orchestrated through OmniStudio OmniScripts.\n- Business Rules Engine (BRE): Complex policy, fee, and eligibility decision matrices executing declarative lookup and calculation algorithms.\n- Inspections & Enforcement: Inspection assessment execution on mobile, violation logging, and compliance re-inspection workflows.\n- Grants & Benefit Management: BenefitProgram definition, applicant eligibility evaluation, BenefitAssignment, and scheduled payment disbursements."
+  },
+  {
+    "id": "education",
+    "name": "Education Cloud (EDA)",
+    "icon": "🎓",
+    "default": false,
+    "required": false,
+    "description": "Education Data Architecture (EDA), Student Success, Admissions & Programs",
+    "officialDataModels": ["hed__Program_Enrollment__c", "hed__Course_Connection__c", "hed__Term__c", "hed__Affiliation__c", "hed__Relationship__c", "Account"],
+    "architecturalStandards": "Education Data Architecture (EDA), Administrative vs Academic Program Account Hierarchy, Student Success Hub (SSH), Appointment Scheduling",
+    "phonetics": {
+      "education cloud": "Education Cloud",
+      "eda": "Education Data Architecture (EDA)",
+      "program enrollment": "Program Enrollment (hed__Program_Enrollment__c)",
+      "course connection": "Course Connection (hed__Course_Connection__c)",
+      "student success": "Student Success Hub (SSH)",
+      "affiliation": "EDA Affiliation"
+    },
+    "instructions": "Education Cloud & EDA: Official Higher-Ed & K-12 Architecture.\n- EDA Data Architecture: Account-to-Account Affiliations (`hed__Affiliation__c`), Contact-to-Contact Relationships (`hed__Relationship__c`), Administrative Account model.\n- Academic Operations: Terms (`hed__Term__c`), Courses, Course Offerings, and Course Connections (`hed__Course_Connection__c` modeling Student vs Faculty roles).\n- Recruitment & Admissions: Applicant journey tracking, lead conversion to applicant, document verification, and decision management.\n- Student Success Hub (SSH): Holistic 360 view of students, early alert flags, success teams, and appointment scheduling."
+  },
+  {
+    "id": "nonprofit",
+    "name": "Nonprofit Cloud (NPSP)",
+    "icon": "🤝",
+    "default": false,
+    "required": false,
+    "description": "NPSP & Unified Cloud, Fundraising, Donations, Grants, Recurring Giving & GAU",
+    "officialDataModels": ["npsp__General_Accounting_Unit__c", "npsp__Allocation__c", "npsp__Recurring_Donation__c", "Opportunity", "Account", "Campaign"],
+    "architecturalStandards": "Household Account Model, Soft Credits & Partial Soft Credits, General Accounting Unit (GAU) Allocations, Automated Recurring Donation Management",
+    "phonetics": {
+      "nonprofit cloud": "Nonprofit Cloud",
+      "npsp": "Nonprofit Success Pack (NPSP)",
+      "recurring donation": "Recurring Donation (npsp__Recurring_Donation__c)",
+      "gau": "General Accounting Unit (GAU)",
+      "soft credit": "Soft Credit / Partial Soft Credit",
+      "household account": "NPSP Household Account"
+    },
+    "instructions": "Nonprofit Cloud & NPSP: Official Philanthropy Architecture.\n- Household Model: Automatic 1:1 grouping of contacts into Household Accounts with automated formal greeting, informal greeting, and household naming rollups.\n- Donation & Revenue Engine: Opportunities representing Donations, Grants, Major Gifts, and Matching Gifts. Automated GAU Allocations (`npsp__Allocation__c`) directing revenue to designated accounting funds.\n- Recurring Donations: `npsp__Recurring_Donation__c` orchestrating fixed or open-ended recurring gift installments with automated card updater and pledge tracking.\n- Relationship & Soft Credits: Contact-to-Contact relationships, automated Opportunity Contact Roles, and Partial Soft Credits recognizing non-donor influencers."
+  },
+  {
+    "id": "consumer-goods",
+    "name": "Consumer Goods Cloud",
+    "icon": "📦",
+    "default": false,
+    "required": false,
+    "description": "Retail Execution, Store Audits, Planograms, Promotions, DSD & Field Reps",
+    "officialDataModels": ["RetailStore", "Visit", "AssessmentTask", "StoreAssortment", "Promotion", "InventoryAudit", "Product2", "DeliveryDoc"],
+    "architecturalStandards": "Retail Execution Lifecycle, Planogram Compliance with Einstein Vision, In-Store Assessment Workflows, Direct Store Delivery (DSD)",
+    "phonetics": {
+      "consumer goods": "Consumer Goods Cloud",
+      "retail execution": "Retail Execution",
+      "store visit": "Store Visit",
+      "planogram": "Planogram Compliance",
+      "dsd": "Direct Store Delivery (DSD)",
+      "store assortment": "Store Assortment"
+    },
+    "instructions": "Consumer Goods Cloud: Official Retail Architecture.\n- Retail Network: RetailStore hierarchies, StoreAssortments, and Preferred Visit time windows for field sales representatives.\n- Visit Execution: Scheduled and ad-hoc Visits. AssessmentTasks orchestrating Inventory Audits, Promotion Checks, Out-of-Stock audits, and Order Generation.\n- Planogram Compliance: Einstein Vision AI checking shelf share and product facings against target planograms via mobile photos.\n- Direct Store Delivery (DSD): Route optimization, van inventory reconciliation, delivery verification, and payment collection at store backdoors."
+  },
+  {
+    "id": "net-zero",
+    "name": "Net Zero Cloud",
+    "icon": "🌱",
+    "default": false,
+    "required": false,
+    "description": "Carbon Accounting, Scope 1, 2, 3 GHG Emissions, ESG Compliance & Auditing",
+    "officialDataModels": ["StnryAssetEnrgyUse", "VehicleEnergyUse", "CarbonFootprint", "EmissionsFactor", "OtherEmissionsFactor", "Scope3PcmtSummary"],
+    "architecturalStandards": "Greenhouse Gas (GHG) Protocol Scope 1-3 Compliance, Automated Emissions Factor Mapping, Materiality Assessments, SEC/CSRD Audit Trail Governance",
+    "phonetics": {
+      "net zero cloud": "Net Zero Cloud",
+      "carbon accounting": "Carbon Accounting",
+      "scope 1 2 3": "Scope 1, 2, and 3 Emissions",
+      "carbon footprint": "Carbon Footprint",
+      "emissions factor": "Emissions Factor",
+      "esg": "ESG Reporting"
+    },
+    "instructions": "Net Zero Cloud: Official Sustainability Architecture.\n- Carbon Inventory: Capturing utility bills and fuel logs via Stationary Asset Energy Use and Vehicle Energy Use records.\n- GHG Scope 1, 2, 3: Scope 1 (direct fuel combustion), Scope 2 (purchased electricity using location-based and market-based methods), Scope 3 (value chain emissions across procurement, business travel, and logistics).\n- Emissions Factor Engine: Automated calculation engine multiplying consumption metrics (kWh, gallons, therms) by regional government/EPA emissions factors.\n- ESG Disclosures: Auditable reporting compliant with CSRD, SEC Climate Disclosures, CDP, and TCFD frameworks."
   }
 ]

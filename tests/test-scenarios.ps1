@@ -36,7 +36,7 @@ Write-Host "==========================================================" -Foregro
 Write-Host "`n--- SCENARIO 1: Server API Contracts ---" -ForegroundColor Magenta
 try {
     $res = Invoke-RestMethod -Uri "http://localhost:3000/api/salesforce-clouds" -Method GET
-    Assert-Test -Scenario "API Contract" -TestName "Returns 9 Salesforce clouds" -Condition ($res.Count -eq 9) -Details "Count was $($res.Count)"
+    Assert-Test -Scenario "API Contract" -TestName "Returns 25 global Salesforce clouds" -Condition ($res.Count -eq 25) -Details "Count was $($res.Count)"
     
     $requiredFields = @("id", "name", "icon", "default", "required", "officialDataModels", "architecturalStandards", "phonetics", "instructions")
     $missingFieldsCount = 0
@@ -47,7 +47,7 @@ try {
             }
         }
     }
-    Assert-Test -Scenario "API Contract" -TestName "All 9 clouds contain mandatory fields" -Condition ($missingFieldsCount -eq 0) -Details "Missing fields: $missingFieldsCount"
+    Assert-Test -Scenario "API Contract" -TestName "All 25 clouds contain mandatory fields" -Condition ($missingFieldsCount -eq 0) -Details "Missing fields: $missingFieldsCount"
     
     # Check Core Platform is marked default & required
     $core = $res | Where-Object { $_.id -eq "core" }
@@ -56,6 +56,18 @@ try {
     # Check Agentforce is marked default
     $af = $res | Where-Object { $_.id -eq "agentforce" }
     Assert-Test -Scenario "API Contract" -TestName "Agentforce is default" -Condition ($af.default -eq $true)
+
+    # Check key enterprise and industry clouds exist in registry
+    $hasCertiniaPsa = $null -ne ($res | Where-Object { $_.id -eq "certinia-psa" })
+    $hasCertiniaCpq = $null -ne ($res | Where-Object { $_.id -eq "certinia-services-cpq" })
+    $hasCertiniaFfa = $null -ne ($res | Where-Object { $_.id -eq "certinia-accounting" })
+    $hasNcino = $null -ne ($res | Where-Object { $_.id -eq "ncino" })
+    $hasCommerce = $null -ne ($res | Where-Object { $_.id -eq "commerce" })
+    $hasB2c = $null -ne ($res | Where-Object { $_.id -eq "b2c-commerce" })
+    $hasAuto = $null -ne ($res | Where-Object { $_.id -eq "automotive" })
+    $hasFsc = $null -ne ($res | Where-Object { $_.id -eq "fsc" })
+    $hasHealth = $null -ne ($res | Where-Object { $_.id -eq "health" })
+    Assert-Test -Scenario "API Contract" -TestName "Certinia (PSA/CPQ/FFA), nCino, Commerce, Auto, FSC & Health registered" -Condition ($hasCertiniaPsa -and $hasCertiniaCpq -and $hasCertiniaFfa -and $hasNcino -and $hasCommerce -and $hasB2c -and $hasAuto -and $hasFsc -and $hasHealth)
 } catch {
     Assert-Test -Scenario "API Contract" -TestName "API Endpoint reachable" -Condition $false -Details $_.Exception.Message
 }
@@ -234,10 +246,18 @@ Assert-Test -Scenario "Cloud Assembly" -TestName "Core + Agentforce instructions
 $instDcMc = Build-CloudInstructions -SelectedIds @("core", "data-cloud", "marketing")
 Assert-Test -Scenario "Cloud Assembly" -TestName "Data Cloud + Marketing contain DMO (__dlm), Zero Copy, and Journey Builder" -Condition ($instDcMc -match "DMO" -and $instDcMc -match "Zero Copy" -and $instDcMc -match "Journey Builder")
 
-# Test 8.3: All 9 Clouds
+# Test 8.3: All 25 Clouds
 $allIds = $cloudsJson | Select-Object -ExpandProperty id
 $instAll = Build-CloudInstructions -SelectedIds $allIds
-Assert-Test -Scenario "Cloud Assembly" -TestName "All 9 clouds combine cleanly into single context" -Condition ($allIds.Count -eq 9 -and $instAll.Length -gt 2000) -Details "Total instruction length: $($instAll.Length) chars"
+Assert-Test -Scenario "Cloud Assembly" -TestName "All 25 clouds combine cleanly into single context" -Condition ($allIds.Count -eq 25 -and $instAll.Length -gt 5000) -Details "Total instruction length: $($instAll.Length) chars"
+
+# Test 8.4: Certinia Suite Assembly (PSA + Services CPQ + Accounting)
+$instCertinia = Build-CloudInstructions -SelectedIds @("core", "certinia-psa", "certinia-services-cpq", "certinia-accounting")
+Assert-Test -Scenario "Cloud Assembly" -TestName "Certinia suite contains pse__Proj__c, pse__Estimate__c, and codaInvoice__c" -Condition ($instCertinia -match "pse__Proj__c" -and $instCertinia -match "pse__Estimate__c" -and $instCertinia -match "codaInvoice__c")
+
+# Test 8.5: nCino Banking & FSC Assembly
+$instBanking = Build-CloudInstructions -SelectedIds @("core", "ncino", "fsc")
+Assert-Test -Scenario "Cloud Assembly" -TestName "nCino + FSC contain LLC_BI__Loan__c and FinServ__FinancialAccount__c" -Condition ($instBanking -match "LLC_BI__" -and $instBanking -match "FinServ__")
 
 # -----------------------------------------------------------------------------
 # SCENARIO 9: Markdown Code Block Auto-Repair (Unterminated Backticks)

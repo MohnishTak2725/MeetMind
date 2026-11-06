@@ -138,3 +138,4 @@ Write-Host "  Missing Functions in HTML: $($missingFunctions.Count)" -Foreground
 Write-Host "  Unwired HTML Buttons:      $unwiredButtons" -ForegroundColor $(if ($unwiredButtons -eq 0) { "Green" } else { "Red" })
 Write-Host "  Unwired HUD Buttons:       $unwiredHudBtns" -ForegroundColor $(if ($unwiredHudBtns -eq 0) { "Green" } else { "Red" })
 Write-Host "==========================================================" -ForegroundColor Cyan
+

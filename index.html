@@ -1067,8 +1067,11 @@
       </div>
       <div class="sf-clouds-popover" id="sfCloudsPopover">
         <div class="sf-clouds-popover-header">
-          <div class="sf-popover-title">Select Active Salesforce Clouds</div>
+          <div class="sf-popover-title">Select Active Salesforce Clouds (25 Clouds)</div>
           <button type="button" class="sf-popover-reset" onclick="resetCloudsDefault()">Reset Default</button>
+        </div>
+        <div style="padding: 6px 10px 4px; background: #0E1322; border-bottom: 1px solid rgba(255,255,255,0.06);">
+          <input type="text" id="sfCloudSearchInput" placeholder="🔍 Search 25 clouds (Certinia, nCino, Commerce, Auto, Health)..." style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(99,120,255,0.3); border-radius:6px; padding:5px 8px; color:#fff; font-size:11px; outline:none;" oninput="filterCloudsList(this.value)" />
         </div>
         <div class="sf-clouds-list" id="sfCloudsList">
           <!-- Dynamically populated from /api/salesforce-clouds -->
@@ -1401,7 +1404,23 @@
         { id: "experience", name: "Experience Cloud", icon: "🌐", default: false, required: false, description: "Communities, LWR, Customer/Partner Portals & Security" },
         { id: "fsl", name: "Field Service (FSL)", icon: "🔧", default: false, required: false, description: "Work Orders, Service Appointments, Dispatcher Console, Scheduling" },
         { id: "omnistudio", name: "OmniStudio", icon: "🎨", default: false, required: false, description: "OmniScripts, FlexCards, Data Mappers & Integration Procedures" },
-        { id: "marketing", name: "Marketing Cloud", icon: "📈", default: false, required: false, description: "Journey Builder, Automation Studio, Data Extensions, AMPscript" }
+        { id: "marketing", name: "Marketing Cloud", icon: "📈", default: false, required: false, description: "Journey Builder, Automation Studio, Data Extensions, AMPscript" },
+        { id: "commerce", name: "Commerce Cloud (B2B/D2C)", icon: "🛍️", default: false, required: false, description: "B2B/D2C on Core, Storefronts, Cart, Checkout & SCAPI" },
+        { id: "b2c-commerce", name: "B2C Commerce (SFCC)", icon: "🛒", default: false, required: false, description: "SFRA, OCAPI, Page Designer, Business Manager & Cartridges" },
+        { id: "automotive", name: "Automotive Cloud", icon: "🚗", default: false, required: false, description: "Vehicle, Asset, Fleet, Telematics, Claims & Warranties" },
+        { id: "certinia-psa", name: "Certinia PSA (PS Cloud)", icon: "💼", default: false, required: false, description: "Projects, Milestones, Resource Requests, Assignments, Timecards & Actuals" },
+        { id: "certinia-services-cpq", name: "Certinia Services CPQ", icon: "📐", default: false, required: false, description: "Services Estimator, Rate Cards, Margin Modeling & SOWs" },
+        { id: "certinia-accounting", name: "Certinia Accounting (FFA)", icon: "💰", default: false, required: false, description: "General Ledger, Invoicing, Cash Matching, Journals & Accounts" },
+        { id: "ncino", name: "nCino (Cloud Banking)", icon: "🏦", default: false, required: false, description: "Commercial Lending, Loan Origination (LOS), Collateral & Spreads" },
+        { id: "fsc", name: "Financial Services Cloud", icon: "💳", default: false, required: false, description: "Wealth Mgmt, Retail Banking, Household/ARC & Compliant Data Sharing" },
+        { id: "health", name: "Health Cloud", icon: "🏥", default: false, required: false, description: "HL7 FHIR R4, Care Plans, Clinical EHR, Provider Search & IDA" },
+        { id: "manufacturing", name: "Manufacturing Cloud", icon: "🏭", default: false, required: false, description: "Sales Agreements, Account Forecasting, Rebates & Warranties" },
+        { id: "revenue-cloud", name: "Revenue Cloud (Billing)", icon: "🧾", default: false, required: false, description: "Salesforce Billing, Invoices, Payments, Subscriptions & RevRec" },
+        { id: "public-sector", name: "Public Sector (PSS)", icon: "🏛️", default: false, required: false, description: "Licensing & Permitting, Inspections, Grants & Business Rules Engine" },
+        { id: "education", name: "Education Cloud (EDA)", icon: "🎓", default: false, required: false, description: "EDA Data Architecture, Student Success Hub & Admissions" },
+        { id: "nonprofit", name: "Nonprofit Cloud (NPSP)", icon: "🤝", default: false, required: false, description: "NPSP, Fundraising, Donations, Grants, Recurring Giving & GAU" },
+        { id: "consumer-goods", name: "Consumer Goods Cloud", icon: "📦", default: false, required: false, description: "Retail Execution, Store Audits, Planograms, Promotions & DSD" },
+        { id: "net-zero", name: "Net Zero Cloud", icon: "🌱", default: false, required: false, description: "Carbon Accounting, Scope 1, 2, 3 GHG Emissions & ESG Compliance" }
       ];
     }
 
@@ -1426,6 +1445,12 @@
     if (pop) pop.classList.toggle('open');
   }
 
+  let cloudFilterQuery = '';
+  function filterCloudsList(query) {
+    cloudFilterQuery = (query || '').toLowerCase().trim();
+    renderCloudsPopover();
+  }
+
   document.addEventListener('click', (e) => {
     const wrap = document.getElementById('sfCloudsWrap');
     const pop = document.getElementById('sfCloudsPopover');
@@ -1438,7 +1463,19 @@
     const list = document.getElementById('sfCloudsList');
     if (!list) return;
     list.innerHTML = '';
-    availableSalesforceClouds.forEach(c => {
+    const filtered = availableSalesforceClouds.filter(c => {
+      if (!cloudFilterQuery) return true;
+      return c.name.toLowerCase().includes(cloudFilterQuery) ||
+             c.description.toLowerCase().includes(cloudFilterQuery) ||
+             c.id.toLowerCase().includes(cloudFilterQuery);
+    });
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:11px;">No clouds matching &ldquo;' + escapeHtml(cloudFilterQuery) + '&rdquo;</div>';
+      return;
+    }
+
+    filtered.forEach(c => {
       const isSel = selectedCloudIds.has(c.id);
       const isReq = c.required === true;
       const row = document.createElement('div');
