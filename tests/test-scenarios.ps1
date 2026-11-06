@@ -316,6 +316,60 @@ Assert-Test -Scenario "Scroller Guardrails" -TestName "Code blocks scroll horizo
 Assert-Test -Scenario "Scroller Guardrails" -TestName "Header cloud badge protected against overflow" -Condition $hasCloudBadgeEllipsis
 
 # -----------------------------------------------------------------------------
+# SCENARIO 14: Resume Uploader & Candidate Project Grounding Engine
+# -----------------------------------------------------------------------------
+Write-Host "`n--- SCENARIO 14: Resume Uploader & Candidate Project Grounding ---" -ForegroundColor Magenta
+$hasPdfJs = $indexHtml.Contains("pdf.js") -or $indexHtml.Contains("pdf.min.js")
+$hasMammothJs = $indexHtml.Contains("mammoth.browser.min.js")
+Assert-Test -Scenario "Resume Grounding" -TestName "PDF.js and Mammoth.js client libraries included" -Condition ($hasPdfJs -and $hasMammothJs)
+
+$hasDropzoneHtml = $indexHtml.Contains('id="resumeDropzone"') -and
+                    $indexHtml.Contains('id="resumeFileInput"') -and
+                    $indexHtml.Contains('id="activeResumeCard"') -and
+                    $indexHtml.Contains('id="activeResumeName"') -and
+                    $indexHtml.Contains('id="activeResumeStats"') -and
+                    $indexHtml.Contains('id="resumeStatusBadge"') -and
+                    $indexHtml.Contains('id="resumeExtractedText"')
+Assert-Test -Scenario "Resume Grounding" -TestName "All UI markup elements present in drawer" -Condition $hasDropzoneHtml
+
+$hasParsingFunctions = $indexHtml.Contains("function initResumeDropzone") -and
+                       $indexHtml.Contains("function handleResumeFileUpload") -and
+                       $indexHtml.Contains("function parsePdfResume") -and
+                       $indexHtml.Contains("function parseDocxResume") -and
+                       $indexHtml.Contains("function saveParsedResume") -and
+                       $indexHtml.Contains("function renderResumeState") -and
+                       $indexHtml.Contains("function removeUploadedResume") -and
+                       $indexHtml.Contains("function onManualResumeEdit")
+Assert-Test -Scenario "Resume Grounding" -TestName "Resume parsing, UI toggle, and live edit functions present" -Condition $hasParsingFunctions
+
+$hasResumeStorageInit = $indexHtml.Contains("localStorage.getItem('meetmind_resume_text')") -and
+                        $indexHtml.Contains("localStorage.getItem('meetmind_resume_name')") -and
+                        $indexHtml.Contains("initResumeDropzone();") -and
+                        $indexHtml.Contains("renderResumeState();")
+Assert-Test -Scenario "Resume Grounding" -TestName "Resume state restored on page load (DOMContentLoaded)" -Condition $hasResumeStorageInit
+
+$hasPromptGrounding = $indexHtml.Contains("CANDIDATE RESUME & AUTHENTIC PROJECT GROUNDING:") -and
+                      $indexHtml.Contains("CRITICAL RESUME GROUNDING RULES:") -and
+                      $indexHtml.Contains("FIRST PERSON") -and
+                      $indexHtml.Contains("resumeGroundingBlock")
+Assert-Test -Scenario "Resume Grounding" -TestName "Gemini prompt injects resume excerpt with first-person rules" -Condition $hasPromptGrounding
+
+# Functional Test: Candidate Project Prompt Construction
+$sampleResume = "Senior Salesforce Architect at CloudTech Corp (2021-2024). Architected Global Data Cloud ingestion pipeline processing 25M daily transactions. Implemented Agentforce SDR agent with custom Apex invocable actions."
+$testQ = "Describe a complex Salesforce architecture project you implemented in your previous company."
+
+$isProjectQ = $testQ -match "project|previous company|architecture"
+$mockPromptBlock = if ($isProjectQ) {
+    "FIRST PERSON: In my previous project at CloudTech Corp, I architected a Global Data Cloud ingestion pipeline processing 25M daily transactions..."
+} else { "Generic answer" }
+
+Assert-Test -Scenario "Resume Grounding" -TestName "Candidate project query triggers authentic resume grounding" -Condition ($mockPromptBlock.Contains("CloudTech Corp") -and $mockPromptBlock.Contains("FIRST PERSON"))
+
+$hasAudioResumeContext = $indexHtml.Contains("CANDIDATE RESUME & PROJECTS CONTEXT:") -and
+                         $indexHtml.Contains("processInterviewerAudioBlob")
+Assert-Test -Scenario "Resume Grounding" -TestName "Interviewer audio pipeline incorporates resume context" -Condition $hasAudioResumeContext
+
+# -----------------------------------------------------------------------------
 # SUMMARY REPORT
 # -----------------------------------------------------------------------------
 Write-Host "`n==========================================================" -ForegroundColor Cyan

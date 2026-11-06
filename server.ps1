@@ -1,4 +1,4 @@
-﻿# MeetMind Local Server with Stealth Bridge API
+# MeetMind Local Server with Stealth Bridge API
 $port = 3000
 $prefix = "http://localhost:$port/"
 $listener = New-Object System.Net.HttpListener

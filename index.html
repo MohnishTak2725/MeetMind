@@ -8,6 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <!-- Client-side PDF and DOCX document parsers for resume grounding -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -326,6 +329,72 @@
     }
 
     .settings-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; }
+
+    /* Resume Uploader & Project Grounding Card */
+    .resume-badge-active {
+      font-size: 10px; color: var(--accent-emerald); font-weight: 700;
+      background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35);
+      padding: 2px 7px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .resume-badge-inactive {
+      font-size: 10px; color: var(--text-muted); font-weight: 500;
+      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2px 7px; border-radius: 6px;
+    }
+    .resume-dropzone {
+      border: 1.5px dashed rgba(99, 120, 255, 0.35);
+      background: rgba(99, 120, 255, 0.04);
+      border-radius: var(--radius-sm);
+      padding: 14px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-bottom: 8px;
+    }
+    .resume-dropzone:hover, .resume-dropzone.dragover {
+      border-color: var(--accent-blue);
+      background: rgba(99, 120, 255, 0.12);
+      box-shadow: 0 0 14px var(--glow-blue);
+    }
+    .resume-upload-icon { font-size: 22px; margin-bottom: 4px; }
+    .resume-upload-title { font-size: 12px; font-weight: 600; color: #FFFFFF; }
+    .resume-upload-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 3px; }
+
+    .active-resume-card {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      animation: fade-in-up 0.2s ease;
+    }
+    .active-resume-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;
+    }
+    .active-resume-info {
+      display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #FFFFFF;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;
+    }
+    .btn-remove-resume {
+      background: transparent; border: none; color: #EF4444; font-size: 13px; font-weight: bold;
+      cursor: pointer; padding: 2px 5px; border-radius: 4px; transition: var(--transition);
+    }
+    .btn-remove-resume:hover { background: rgba(239, 68, 68, 0.2); }
+    .active-resume-stats { font-size: 10.5px; color: #34D399; margin-bottom: 6px; }
+    .active-resume-actions { display: flex; gap: 6px; }
+    .btn-view-resume {
+      background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #CBD5E1; font-size: 10.5px; padding: 3px 8px; border-radius: 5px; cursor: pointer; transition: var(--transition);
+    }
+    .btn-view-resume:hover { background: rgba(255, 255, 255, 0.16); color: #FFFFFF; }
+    .resume-preview-box { margin-top: 8px; }
+    .resume-preview-textarea {
+      width: 100%; height: 110px;
+      background: #0A0E1A; border: 1px solid rgba(99, 120, 255, 0.3);
+      border-radius: 6px; padding: 8px; font-size: 11px; line-height: 1.45;
+      color: #E2E8F0; font-family: 'JetBrains Mono', monospace;
+      resize: vertical;
+    }
 
     .field-group { margin-bottom: 14px; }
     .field-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: block; }
@@ -1053,14 +1122,51 @@
         <option value="de-DE">German</option>
       </select>
     </div>
-    <div class="field-group">
-      <label class="field-label" for="contextInput">Meeting / Interview Context</label>
-      <input type="text" class="field-input" id="contextInput" placeholder="e.g. Salesforce Developer, Full-Stack..." />
-      <div class="preset-chips">
-        <span class="preset-chip" onclick="setContextPreset('Salesforce Developer Interview (SOQL, Apex, LWC, Triggers, Flows)')">⚡ Salesforce (SOQL/Apex)</span>
-        <span class="preset-chip" onclick="setContextPreset('Full-Stack Web Engineering (REST APIs, React, Node, Databases)')">🌐 Full-Stack / Web</span>
-        <span class="preset-chip" onclick="setContextPreset('Cloud, DevOps & Microservices (AWS, Kubernetes, CI/CD)')">☁️ Cloud / DevOps</span>
-        <span class="preset-chip" onclick="setContextPreset('System Design & Database Architecture (SQL, NoSQL, Caching)')">📊 System Design</span>
+    <div class="field-group" id="resumeGroundingGroup">
+      <label class="field-label" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>📄 Candidate Resume &amp; Projects</span>
+        <span id="resumeStatusBadge" class="resume-badge-inactive">No Resume Uploaded</span>
+      </label>
+      <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.4;">
+        Upload your resume so Gemini grounds all project, experience, and role questions strictly in your real-world background.
+      </div>
+      
+      <!-- Resume Upload Dropzone -->
+      <div class="resume-dropzone" id="resumeDropzone" onclick="document.getElementById('resumeFileInput').click()">
+        <input type="file" id="resumeFileInput" accept=".pdf,.docx,.txt,.md" style="display:none;" onchange="handleResumeFileUpload(this.files[0])" />
+        <div class="resume-upload-icon">📄</div>
+        <div class="resume-upload-title" id="resumeUploadTitle">Upload Resume (PDF, DOCX, TXT, MD)</div>
+        <div class="resume-upload-sub">Click to browse or drag &amp; drop file here</div>
+      </div>
+
+      <!-- Active Resume Card -->
+      <div class="active-resume-card" id="activeResumeCard" style="display:none;">
+        <div class="active-resume-header">
+          <div class="active-resume-info">
+            <span>📎</span>
+            <div class="active-resume-name" id="activeResumeName">Resume.pdf</div>
+          </div>
+          <button type="button" class="btn-remove-resume" onclick="removeUploadedResume()" title="Remove resume">✕</button>
+        </div>
+        <div class="active-resume-stats" id="activeResumeStats">Parsed 0 words • Grounded for interview</div>
+        <div class="active-resume-actions">
+          <button type="button" class="btn-view-resume" onclick="toggleResumePreview()">👁️ View / Edit Content</button>
+          <button type="button" class="btn-view-resume" onclick="document.getElementById('resumeFileInput').click()">🔄 Replace</button>
+        </div>
+        <div class="resume-preview-box" id="resumePreviewBox" style="display:none;">
+          <textarea class="resume-preview-textarea" id="resumeExtractedText" placeholder="Extracted resume text appears here..." oninput="onManualResumeEdit()"></textarea>
+        </div>
+      </div>
+
+      <!-- Target Role / Company Focus (Optional Context) -->
+      <div style="margin-top:10px;">
+        <label class="field-label" for="contextInput" style="font-size:11px;">Target Role / Company Focus (Optional)</label>
+        <input type="text" class="field-input" id="contextInput" placeholder="e.g. Lead Salesforce Architect at Acme Corp" />
+        <div class="preset-chips">
+          <span class="preset-chip" onclick="setContextPreset('Salesforce Principal Architect (Apex, LWC, Agentforce, Data Cloud)')">⚡ Salesforce Architect</span>
+          <span class="preset-chip" onclick="setContextPreset('Senior Salesforce Developer (Apex, SOQL, LWC, Integrations)')">💻 Salesforce Dev</span>
+          <span class="preset-chip" onclick="setContextPreset('Full-Stack Web Engineering (REST APIs, React, Node, SQL)')">🌐 Full-Stack / Web</span>
+        </div>
       </div>
     </div>
     <div class="field-group">
@@ -1256,6 +1362,8 @@
   let questionBuffer = '';
   let questionTimer = null;
   let sessionContext = '';
+  let candidateResumeText = '';
+  let candidateResumeFileName = '';
   let pendingQuestions = new Set();
 
   // Map legacy / invalid model names to current ultra-fast equivalents
@@ -1460,6 +1568,12 @@
         }
       }
     }
+
+    // Initialize candidate resume grounding
+    candidateResumeText = localStorage.getItem('meetmind_resume_text') || '';
+    candidateResumeFileName = localStorage.getItem('meetmind_resume_name') || '';
+    initResumeDropzone();
+    renderResumeState();
 
     document.addEventListener('click', (e) => {
       const panel = document.getElementById('settingsPanel');
@@ -1851,6 +1965,14 @@
     localStorage.setItem('meetmind_model', model);
     localStorage.setItem('meetmind_context', ctx);
     localStorage.setItem('meetmind_custom_jargon', customJargon);
+
+    const resumeTextarea = document.getElementById('resumeExtractedText');
+    if (resumeTextarea && resumeTextarea.value.trim()) {
+      candidateResumeText = resumeTextarea.value.trim();
+      localStorage.setItem('meetmind_resume_text', candidateResumeText);
+      renderResumeState();
+    }
+
     document.getElementById('settingsPanel').classList.remove('open');
     showToast('Settings saved!', 'success');
     refreshModelList(key);
@@ -1939,6 +2061,196 @@
       localStorage.setItem('meetmind_context', preset);
       showToast('Domain context set: ' + preset.split('(')[0].trim(), 'success');
     }
+  }
+
+  // Resume Parsing & Candidate Project Grounding
+  function initResumeDropzone() {
+    const dropzone = document.getElementById('resumeDropzone');
+    if (!dropzone) return;
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add('dragover');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('dragover');
+      }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files && files.length > 0) {
+        handleResumeFileUpload(files[0]);
+      }
+    });
+  }
+
+  async function handleResumeFileUpload(file) {
+    if (!file) return;
+    const name = file.name;
+    const lowerName = name.toLowerCase();
+    showToast('Parsing ' + name + '…', '');
+
+    try {
+      if (lowerName.endsWith('.pdf')) {
+        await parsePdfResume(file);
+      } else if (lowerName.endsWith('.docx')) {
+        await parseDocxResume(file);
+      } else if (lowerName.endsWith('.txt') || lowerName.endsWith('.md')) {
+        await parsePlainTextResume(file);
+      } else {
+        await parsePlainTextResume(file);
+      }
+    } catch (err) {
+      console.error('Resume parse error:', err);
+      showToast('Error reading resume: ' + err.message, 'error');
+    }
+  }
+
+  function parsePlainTextResume(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        saveParsedResume(file.name, text);
+        resolve();
+      };
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  }
+
+  async function parseDocxResume(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    if (window.mammoth && window.mammoth.extractRawText) {
+      const result = await window.mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+      saveParsedResume(file.name, result.value || '');
+    } else {
+      const text = extractAsciiStrings(arrayBuffer);
+      saveParsedResume(file.name, text);
+    }
+  }
+
+  async function parsePdfResume(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    if (window.pdfjsLib && window.pdfjsLib.getDocument) {
+      if (window.pdfjsLib.GlobalWorkerOptions) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+      const typedarray = new Uint8Array(arrayBuffer);
+      const loadingTask = window.pdfjsLib.getDocument({ data: typedarray });
+      const pdf = await loadingTask.promise;
+      let fullText = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ');
+        fullText += pageText + '\n\n';
+      }
+      saveParsedResume(file.name, fullText);
+    } else {
+      const text = extractAsciiStrings(arrayBuffer);
+      saveParsedResume(file.name, text);
+    }
+  }
+
+  function extractAsciiStrings(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let result = '';
+    let currentStr = '';
+    for (let i = 0; i < bytes.length; i++) {
+      const b = bytes[i];
+      if ((b >= 32 && b <= 126) || b === 10 || b === 13 || b === 9) {
+        currentStr += String.fromCharCode(b);
+      } else {
+        if (currentStr.length >= 4) {
+          result += currentStr + ' ';
+        }
+        currentStr = '';
+      }
+    }
+    if (currentStr.length >= 4) result += currentStr;
+    return result.replace(/\s+/g, ' ').trim();
+  }
+
+  function saveParsedResume(name, rawText) {
+    const cleaned = (rawText || '').trim();
+    if (!cleaned) {
+      showToast('Could not extract text from ' + name + '. You can paste text manually.', 'error');
+      return;
+    }
+    candidateResumeText = cleaned;
+    candidateResumeFileName = name;
+    localStorage.setItem('meetmind_resume_text', cleaned);
+    localStorage.setItem('meetmind_resume_name', name);
+    renderResumeState();
+    const words = cleaned.split(/\s+/).filter(Boolean).length;
+    showToast('Resume grounded! ' + words.toLocaleString() + ' words parsed ✓', 'success');
+  }
+
+  function renderResumeState() {
+    const dropzone = document.getElementById('resumeDropzone');
+    const card = document.getElementById('activeResumeCard');
+    const nameEl = document.getElementById('activeResumeName');
+    const statsEl = document.getElementById('activeResumeStats');
+    const badge = document.getElementById('resumeStatusBadge');
+    const textarea = document.getElementById('resumeExtractedText');
+
+    if (candidateResumeText) {
+      const words = candidateResumeText.split(/\s+/).filter(Boolean).length;
+      if (dropzone) dropzone.style.display = 'none';
+      if (card) card.style.display = 'block';
+      if (nameEl) nameEl.textContent = candidateResumeFileName || 'Uploaded Resume';
+      if (statsEl) statsEl.textContent = 'Parsed ' + words.toLocaleString() + ' words • Grounded for interview';
+      if (badge) {
+        badge.className = 'resume-badge-active';
+        badge.textContent = 'Grounded Active ✓';
+      }
+      if (textarea) textarea.value = candidateResumeText;
+    } else {
+      if (dropzone) dropzone.style.display = 'block';
+      if (card) card.style.display = 'none';
+      if (badge) {
+        badge.className = 'resume-badge-inactive';
+        badge.textContent = 'No Resume Uploaded';
+      }
+      if (textarea) textarea.value = '';
+    }
+  }
+
+  function removeUploadedResume() {
+    candidateResumeText = '';
+    candidateResumeFileName = '';
+    localStorage.removeItem('meetmind_resume_text');
+    localStorage.removeItem('meetmind_resume_name');
+    const fileInput = document.getElementById('resumeFileInput');
+    if (fileInput) fileInput.value = '';
+    renderResumeState();
+    showToast('Resume removed', 'info');
+  }
+
+  function toggleResumePreview() {
+    const box = document.getElementById('resumePreviewBox');
+    if (!box) return;
+    box.style.display = (box.style.display === 'none' || !box.style.display) ? 'block' : 'none';
+  }
+
+  function onManualResumeEdit() {
+    const textarea = document.getElementById('resumeExtractedText');
+    if (!textarea) return;
+    candidateResumeText = textarea.value;
+    localStorage.setItem('meetmind_resume_text', candidateResumeText);
+    const words = candidateResumeText.split(/\s+/).filter(Boolean).length;
+    const statsEl = document.getElementById('activeResumeStats');
+    if (statsEl) statsEl.textContent = 'Parsed ' + words.toLocaleString() + ' words • Grounded for interview';
   }
 
   function updateDiag(text, state) {
@@ -2395,12 +2707,16 @@
 
       try {
         const ctxLine = sessionContext ? '\nDomain Context: ' + sessionContext : '\nDomain Context: Technical Interview (Salesforce, Software Engineering, Architecture, Coding)';
+        const resumeAudioBlock = (candidateResumeText && candidateResumeText.trim().length > 0)
+          ? '\n\nCANDIDATE RESUME & PROJECTS CONTEXT:\n' + candidateResumeText.slice(0, 3000) + '\nGround questions regarding candidate projects, past experience, or responsibilities strictly and authentically in this background in the first person.\n'
+          : '';
         const prompt =
           'You are an intelligent real-time technical meeting assistant.' + ctxLine +
+          resumeAudioBlock +
           '\nListen carefully to this audio clip of an interviewer speaking in a technical meeting.' +
           '\nInstructions:' +
           '\n1. Transcribe the exact question, prompt, or technical problem the interviewer asked.' +
-          '\n2. If they asked a question or asked for code/query/design/logic: Provide the complete, accurate, production-ready answer or code block.' +
+          '\n2. If they asked a question or asked for code/query/design/logic: Provide the complete, accurate, production-ready answer or code block. If asked about projects, ground response in candidate resume.' +
           '\n3. If it is casual speech, small talk, or not a question: State "Conversational: <transcription>".' +
           '\nFormat your response strictly as:' +
           '\nQUESTION: <exact transcribed question>' +
@@ -2790,7 +3106,28 @@
 
       const activeCloudNames = activeCloudObjs.map(c => c.name).join(', ') || 'Salesforce Platform & Agentforce';
       const recentCtx = transcriptSegments.slice(-6).map(s => s.text).join(' ');
-      const ctxLine = sessionContext ? '\nCandidate Profile / Context: ' + sessionContext : '';
+      const ctxLine = sessionContext ? '\nCandidate Target Role / Focus: ' + sessionContext : '';
+
+      // Prepare Candidate Resume & Project Grounding Block if available
+      let resumeGroundingBlock = '';
+      if (candidateResumeText && candidateResumeText.trim().length > 0) {
+        const excerpt = candidateResumeText.slice(0, 4000);
+        resumeGroundingBlock =
+          "\n\n=========================================\n" +
+          "CANDIDATE RESUME & AUTHENTIC PROJECT GROUNDING:\n" +
+          "--- BEGIN RESUME CONTENT ---\n" +
+          excerpt + "\n" +
+          "--- END RESUME CONTENT ---\n" +
+          "CRITICAL RESUME GROUNDING RULES:\n" +
+          "1. Project & Experience Questions (e.g., 'Tell me about your projects', 'Describe a complex challenge you solved', 'How did you use Apex/LWC/Data Cloud in your last job?', 'What did you do at [Company]?'):\n" +
+          "   - Speak strictly in the FIRST PERSON ('In my project at [Company from resume], I designed/built...').\n" +
+          "   - Explicitly cite the actual real-world projects, architectures, business domains, custom objects, integrations, and tools present in the resume.\n" +
+          "   - DO NOT make up generic hypothetical projects when actual projects are in the resume.\n" +
+          "2. Conceptual & Technical Questions:\n" +
+          "   - Follow the 4-5 line technical answer standard.\n" +
+          "   - When natural, anchor explanations with brief references to practical experience from the candidate's resume.\n" +
+          "=========================================\n";
+      }
 
       const sysRule = "You are an elite Salesforce Principal Architect & Technical Interview Copilot preparing articulate spoken answers for a candidate in a live technical interview.\n" +
         "Active Clouds / Specializations: " + activeCloudNames + "\n\n" +
@@ -2811,9 +3148,10 @@
 
       const prompt = sysRule +
         (ctxLine ? '\nContext: ' + ctxLine : '') +
+        resumeGroundingBlock +
         (recentCtx ? '\nRecent conversation snippet: "' + recentCtx + '"' : '') +
         '\n\nInterview Question Asked: "' + cleanQ + '"' +
-        '\nProvide the direct, complete 4-5 line detailed spoken answer for the candidate without wrapping quotes:';
+        '\nProvide the direct, complete spoken answer for the candidate (grounded in candidate resume if asking about projects or experience) without wrapping quotes:';
 
       const answer = await callGeminiWithFallback(prompt, loadId, 1200);
       document.getElementById(loadId)?.remove();

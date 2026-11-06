@@ -1,4 +1,4 @@
-﻿# MeetMind Native WPF Stealth HUD
+# MeetMind Native WPF Stealth HUD
 # Creates a native Windows window with WDA_EXCLUDEFROMCAPTURE (0x00000011) and HWND_TOPMOST.
 # Because this process owns the window, Windows allows display affinity without ERROR_ACCESS_DENIED.
 
