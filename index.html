@@ -823,9 +823,10 @@
     <div class="field-group">
       <label class="field-label" for="modelSelectPrompt">Gemini Model</label>
       <select class="field-select" id="modelSelectPrompt">
-        <option value="gemini-3.8-flash">Gemini 3.8 Flash (Recommended — Fast)</option>
-        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Most capable)</option>
-        <option value="gemini-3.8-pro">Gemini 3.8 Pro (Advanced)</option>
+        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Ultra-Fast ⚡ — Recommended)</option>
+        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast &amp; Stable)</option>
+        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Reasoning)</option>
       </select>
     </div>
     <button class="btn-save" onclick="saveApiKeyPrompt()">Launch MeetMind ✨</button>
@@ -870,9 +871,10 @@
     <div class="field-group">
       <label class="field-label" for="modelSelect">Model</label>
       <select class="field-select" id="modelSelect">
-        <option value="gemini-3.8-flash">Gemini 3.8 Flash (Fast)</option>
-        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Most capable)</option>
-        <option value="gemini-3.8-pro">Gemini 3.8 Pro (Advanced)</option>
+        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Ultra-Fast ⚡ — Recommended)</option>
+        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast &amp; Stable)</option>
+        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Reasoning)</option>
       </select>
       <button type="button" class="btn-secondary" onclick="testAndRefreshModels()">🔄 Test Key &amp; Fetch Live Models</button>
     </div>
@@ -1083,7 +1085,7 @@
 
 <script>
   let apiKey = '';
-  let selectedModel = 'gemini-3.8-flash';
+  let selectedModel = 'gemini-2.0-flash';
   let recognition = null;
   let isListening = false;
   let interimEl = null;
@@ -1093,15 +1095,16 @@
   let sessionContext = '';
   let pendingQuestions = new Set();
 
-  // Map old/deprecated model names to current equivalents
+  // Map legacy / invalid model names to current ultra-fast equivalents
   const MODEL_MIGRATION = {
-    'gemini-2.0-flash': 'gemini-3.8-flash',
-    'gemini-2.5-flash': 'gemini-3.8-flash',
-    'gemini-1.5-flash': 'gemini-3.8-flash',
-    'gemini-1.5-pro':   'gemini-2.5-pro',
+    'gemini-3.8-flash': 'gemini-2.0-flash',
+    'gemini-3.8-pro':   'gemini-2.5-pro',
+    'gemini-3.5-flash': 'gemini-2.0-flash',
+    'gemini-2.0-flash': 'gemini-2.0-flash',
+    'gemini-1.5-flash': 'gemini-1.5-flash',
   };
 
-  let dynamicFallbackModels = ['gemini-3.8-flash', 'gemini-2.5-pro', 'gemini-3.8-pro'];
+  let dynamicFallbackModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-2.5-pro'];
 
   // Modular Interview Skills loaded from /skills directory
   let loadedSkills = [];
@@ -1226,25 +1229,24 @@
           .map(m => m.name.replace(/^models\//, ''))
           .filter(id => !id.includes('embedding') && !id.includes('aqa') && !id.includes('imagen') && !id.includes('vision'));
 
-        // Exclude confirmed deprecated models
-        const available = activeModels.filter(id => id !== 'gemini-2.5-flash' && id !== 'gemini-2.0-flash' && !id.startsWith('gemini-1.5'));
-
-        if (available.length > 0) {
-          // Sort flash first, then pro, prioritized
-          available.sort((a, b) => {
-            if (a === 'gemini-3.8-flash') return -1;
-            if (b === 'gemini-3.8-flash') return 1;
+        if (activeModels.length > 0) {
+          // Prioritize ultra-fast Flash models (2.0-flash, 1.5-flash)
+          activeModels.sort((a, b) => {
+            if (a === 'gemini-2.0-flash') return -1;
+            if (b === 'gemini-2.0-flash') return 1;
+            if (a === 'gemini-1.5-flash') return -1;
+            if (b === 'gemini-1.5-flash') return 1;
             if (a.includes('flash') && !b.includes('flash')) return -1;
             if (!a.includes('flash') && b.includes('flash')) return 1;
             return a.localeCompare(b);
           });
 
-          dynamicFallbackModels = [...available];
-          updateModelDropdown('modelSelect', available, selectedModel);
-          updateModelDropdown('modelSelectPrompt', available, selectedModel);
+          dynamicFallbackModels = [...activeModels];
+          updateModelDropdown('modelSelect', activeModels, selectedModel);
+          updateModelDropdown('modelSelectPrompt', activeModels, selectedModel);
 
           if (showFeedback) {
-            showToast('Connected! ' + available.length + ' active models loaded ✓', 'success');
+            showToast('Connected! ' + activeModels.length + ' active models loaded ✓', 'success');
           }
         }
       }
@@ -1262,18 +1264,21 @@
       const opt = document.createElement('option');
       opt.value = m;
       let label = m;
-      if (m === 'gemini-3.8-flash') label = 'Gemini 3.8 Flash (Recommended)';
-      else if (m === 'gemini-2.5-pro') label = 'Gemini 2.5 Pro (Capable)';
-      else if (m === 'gemini-3.8-pro') label = 'Gemini 3.8 Pro';
-      else if (m.includes('flash')) label = m + ' (Fast)';
-      else if (m.includes('pro')) label = m + ' (Pro)';
+      if (m === 'gemini-2.0-flash') label = '⚡ Gemini 2.0 Flash (Ultra-Fast — Recommended)';
+      else if (m === 'gemini-1.5-flash') label = '⚡ Gemini 1.5 Flash (Fast & Stable)';
+      else if (m === 'gemini-2.5-flash') label = '⚡ Gemini 2.5 Flash';
+      else if (m === 'gemini-2.5-pro') label = '🧠 Gemini 2.5 Pro (Deep)';
+      else if (m.includes('flash')) label = '⚡ ' + m;
+      else if (m.includes('pro')) label = '🧠 ' + m;
       opt.textContent = label;
       el.appendChild(opt);
     });
     if (models.includes(prev)) {
       el.value = prev;
-    } else if (models.includes('gemini-3.8-flash')) {
-      el.value = 'gemini-3.8-flash';
+    } else if (models.includes('gemini-2.0-flash')) {
+      el.value = 'gemini-2.0-flash';
+    } else if (models.includes('gemini-1.5-flash')) {
+      el.value = 'gemini-1.5-flash';
     }
   }
 
@@ -2188,9 +2193,9 @@
 
     const modelsToTry = [
       activeModel,
-      'gemini-2.5-flash',
       'gemini-2.0-flash',
       'gemini-1.5-flash',
+      'gemini-2.5-flash',
       'gemini-2.5-pro',
       ...dynamicFallbackModels.filter(m => m !== activeModel)
     ];
@@ -2479,6 +2484,8 @@
     if (!isQuestion(text)) return;
     clearTimeout(questionTimer);
     questionBuffer += ' ' + text;
+    // Ultra-fast trigger: If text ends with '?' or question starter, trigger in 100-200ms
+    const delay = text.trim().endsWith('?') ? 100 : 200;
     questionTimer = setTimeout(() => {
       const q = questionBuffer.trim();
       questionBuffer = '';
@@ -2486,7 +2493,7 @@
         pendingQuestions.add(q);
         answerQuestion(q);
       }
-    }, 900);
+    }, delay);
   }
 
   async function answerQuestion(question) {
@@ -2522,14 +2529,15 @@
       
       const sysRule = (currentSkill && currentSkill.systemPrompt)
         ? currentSkill.systemPrompt
-        : 'You are an intelligent, concise technical meeting assistant.\n1. Give exact code or 2-3 direct bullet points.\n2. Keep total response under 80 words.';
+        : 'You are an expert technical interview copilot providing articulate, spoken answers for a candidate.';
 
-      const maxToks = (currentSkill && currentSkill.maxTokens) ? currentSkill.maxTokens : 250;
+      const maxToks = (currentSkill && currentSkill.maxTokens) ? currentSkill.maxTokens : 280;
 
-      const prompt = sysRule + ctxLine +
-        '\n\nRecent transcript: "' + recentCtx + '"' +
-        '\nQuestion/Task: "' + cleanQ + '"' +
-        '\nAnswer directly with production code/query or punchy bullets:';
+      const prompt = sysRule +
+        (ctxLine ? '\nContext: ' + ctxLine : '') +
+        (recentCtx ? '\nRecent conversation: "' + recentCtx + '"' : '') +
+        '\n\nInterview Question Asked: "' + cleanQ + '"' +
+        '\nProvide the direct, articulate spoken answer for the candidate:';
 
       const answer = await callGeminiWithFallback(prompt, loadId, maxToks);
       document.getElementById(loadId)?.remove();
@@ -2570,7 +2578,7 @@
     return RETRYABLE_PHRASES.some(p => lower.includes(p));
   }
 
-  async function callGeminiWithFallback(prompt, loadId, maxTokens = 250) {
+  async function callGeminiWithFallback(prompt, loadId, maxTokens = 280) {
     // Ensure clean model selection
     let activeModel = selectedModel;
     if (MODEL_MIGRATION[activeModel]) {
@@ -2589,7 +2597,6 @@
     for (let i = 0; i < modelsToTry.length; i++) {
       const model = modelsToTry[i];
 
-      // Try up to 2 attempts for transient high-demand spikes
       for (let attempt = 1; attempt <= 2; attempt++) {
         const loadEl = document.getElementById(loadId);
         if (i > 0 || attempt > 1) {
@@ -2601,17 +2608,7 @@
               hint.style.cssText = 'font-size:11px;color:var(--accent-amber);margin-bottom:8px;font-weight:500;';
               loadEl.prepend(hint);
             }
-            if (attempt > 1) {
-              hint.textContent = '⏳ ' + model + ' busy, retrying in 1.2s (attempt 2)…';
-            } else {
-              hint.textContent = '⚡ ' + modelsToTry[i-1] + ' unavailable, switching to ' + model + '…';
-            }
-          }
-          if (attempt > 1) {
-            await new Promise(r => setTimeout(r, 1200));
-          } else {
-            showToast('Switching to ' + model + '…', '');
-            await new Promise(r => setTimeout(r, 600));
+            hint.textContent = '⚡ Switching to ' + model + '…';
           }
         }
 
@@ -2623,7 +2620,7 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.2, maxOutputTokens: maxTokens || 250 }
+                generationConfig: { temperature: 0.2, maxOutputTokens: maxTokens || 280 }
               })
             }
           );
@@ -2631,23 +2628,23 @@
           if (res.ok) {
             const data = await res.json();
             if (i > 0) showToast('Answered via ' + model + ' ✓', 'success');
-            return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No answer generated.';
+            let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            let cleanText = rawText.replace(/^[:\s-]+/, '').trim();
+            return cleanText || 'No answer generated.';
           }
 
           const errData = await res.json().catch(() => ({}));
           const errMsg = errData.error?.message || 'HTTP ' + res.status;
           lastError = new Error(errMsg);
 
-          // If high demand spike on attempt 1, retry once on this model
+          // If high demand spike on attempt 1, retry once immediately
           if (errMsg.toLowerCase().includes('high demand') && attempt === 1) {
             continue;
           }
 
-          // If retryable/unavailable, skip to next model
           if (isRetryableError(errMsg)) {
             break;
           } else {
-            // Non-retryable error (e.g. invalid API key) - throw immediately
             throw lastError;
           }
         } catch (fetchErr) {
