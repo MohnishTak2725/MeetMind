@@ -135,3 +135,4 @@ flowchart TD
 
 ## 📄 License
 This project is for personal educational and productivity use. Ensure you comply with meeting recording and transparency policies applicable in your jurisdiction.
+
