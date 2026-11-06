@@ -7,3 +7,4 @@ echo   Running at http://localhost:3000/
 echo ===================================================
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0server.ps1"
 pause
+

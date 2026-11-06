@@ -100,7 +100,7 @@ $xaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MeetMind Stealth HUD"
-        Height="620" Width="440"
+        Height="640" Width="480" MinWidth="400"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -120,34 +120,31 @@ $xaml = @"
 
             <!-- Header / Drag Bar -->
             <Border Grid.Row="0" Name="HeaderBar" Background="#EE101524" CornerRadius="12,12,0,0" Cursor="Hand" BorderBrush="#22FFFFFF" BorderThickness="0,0,0,1">
-                <Grid Margin="12,0,10,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="MeetMind HUD" Foreground="#FFFFFF" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
-                        <Border Background="#2010B981" CornerRadius="10" Padding="5,2" Margin="5,0,0,0" BorderBrush="#4010B981" BorderThickness="1" VerticalAlignment="Center">
-                            <TextBlock Text="[Shielded]" Foreground="#34D399" FontSize="10" FontWeight="SemiBold"/>
-                        </Border>
-                        <Border Name="SkillBadgeBorder" Background="#206378FF" CornerRadius="10" Padding="5,2" Margin="5,0,0,0" BorderBrush="#406378FF" BorderThickness="1" VerticalAlignment="Center">
-                            <TextBlock Name="SkillBadgeText" Text="⚡ Salesforce" Foreground="#93C5FD" FontSize="10" FontWeight="SemiBold"/>
-                        </Border>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <ComboBox Name="OpacityCombo" Width="68" Height="24" FontSize="11" Background="#20FFFFFF" Foreground="#FFFFFF" Margin="0,0,6,0" VerticalContentAlignment="Center">
-                            <ComboBoxItem Content="100%" />
+                <DockPanel Margin="10,0,8,0" LastChildFill="True">
+                    <!-- Right Utility Controls: Anchored to right edge, never clipped or pushed off -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Name="WebBtn" Content="🌐 Web" Width="48" Height="24" Background="#206378FF" Foreground="#93C5FD" BorderThickness="1" BorderBrush="#406378FF" Margin="0,0,5,0" Cursor="Hand" FontWeight="SemiBold" FontSize="10" ToolTip="Open MeetMind Web App in Browser (http://localhost:3000)"/>
+                        <ComboBox Name="OpacityCombo" Width="60" Height="24" FontSize="11" Background="#20FFFFFF" Foreground="#FFFFFF" Margin="0,0,5,0" VerticalContentAlignment="Center" ToolTip="HUD Transparency">
+                            <ComboBoxItem Content="100%"/>
                             <ComboBoxItem Content="85%" IsSelected="True"/>
                             <ComboBoxItem Content="70%"/>
                             <ComboBoxItem Content="50%"/>
                         </ComboBox>
-                        <Button Name="FontBtn" Content="A+" Width="26" Height="24" Background="#20FFFFFF" Foreground="#CBD5E1" BorderThickness="0" Margin="0,0,4,0" Cursor="Hand" FontWeight="Bold" FontSize="11"/>
-                        <Button Name="CloseBtn" Content="X" Width="26" Height="24" Background="#30EF4444" Foreground="#FCA5A5" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="12"/>
+                        <Button Name="FontBtn" Content="A+" Width="26" Height="24" Background="#20FFFFFF" Foreground="#CBD5E1" BorderThickness="0" Margin="0,0,4,0" Cursor="Hand" FontWeight="Bold" FontSize="11" ToolTip="Toggle Large Text"/>
+                        <Button Name="CloseBtn" Content="✕" Width="26" Height="24" Background="#D5EF4444" Foreground="#FFFFFF" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="13" ToolTip="Close Stealth HUD"/>
                     </StackPanel>
-                </Grid>
+
+                    <!-- Left Branding & Dynamic Cloud Badge: Truncates with ellipsis if long -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" ClipToBounds="True">
+                        <TextBlock Text="MeetMind" Foreground="#FFFFFF" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                        <Border Background="#2010B981" CornerRadius="8" Padding="4,2" Margin="5,0,0,0" BorderBrush="#4010B981" BorderThickness="1" VerticalAlignment="Center" ToolTip="Invisible to Screen Sharing">
+                            <TextBlock Text="🛡️" Foreground="#34D399" FontSize="10"/>
+                        </Border>
+                        <Border Name="SkillBadgeBorder" Background="#206378FF" CornerRadius="8" Padding="5,2" Margin="6,0,6,0" BorderBrush="#406378FF" BorderThickness="1" VerticalAlignment="Center" MaxWidth="140">
+                            <TextBlock Name="SkillBadgeText" Text="⚡ Salesforce" Foreground="#93C5FD" FontSize="10" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                        </Border>
+                    </StackPanel>
+                </DockPanel>
             </Border>
 
             <!-- Navigation Tabs -->
@@ -214,6 +211,7 @@ $win.Add_SourceInitialized({
 
 # Element hooks
 $header = $win.FindName("HeaderBar")
+$webBtn = $win.FindName("WebBtn")
 $opacityCombo = $win.FindName("OpacityCombo")
 $fontBtn = $win.FindName("FontBtn")
 $closeBtn = $win.FindName("CloseBtn")
@@ -226,6 +224,25 @@ $transcriptContainer = $win.FindName("TranscriptContainer")
 $askInput = $win.FindName("AskInput")
 $askBtn = $win.FindName("AskBtn")
 $skillBadgeText = $win.FindName("SkillBadgeText")
+
+# Launch browser to index.html
+if ($webBtn) {
+    $webBtn.Add_Click({
+        Start-Process "http://localhost:3000/"
+    })
+}
+
+# Auto-ensure server is running in background
+try {
+    $null = Invoke-RestMethod -Uri "http://localhost:3000/api/skills/active" -Method GET -TimeoutSec 1
+} catch {
+    $hudDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+    if (-not $hudDir) { $hudDir = (Get-Location).Path }
+    $srv = Join-Path $hudDir "server.ps1"
+    if (Test-Path $srv) {
+        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$srv`"" -WindowStyle Hidden
+    }
+}
 
 # Drag move
 $header.Add_MouseDown({

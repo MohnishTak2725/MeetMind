@@ -285,6 +285,33 @@ $limitsCheck = $coreCloud.instructions -match "100 SOQL sync" -and
 Assert-Test -Scenario "Governor Limits" -TestName "Core Cloud contains official 100/200 SOQL and 6MB/12MB limits" -Condition $limitsCheck -Details "Core instructions: $($coreCloud.instructions)"
 
 # -----------------------------------------------------------------------------
+# SCENARIO 12: Stealth HUD XAML Header & Close Utility Anchor
+# -----------------------------------------------------------------------------
+Write-Host "`n--- SCENARIO 12: Stealth HUD Header & Close Utility ---" -ForegroundColor Magenta
+$hudScript = Get-Content -Raw "stealth-hud.ps1"
+$hasCloseRightDock = $hudScript.Contains('DockPanel.Dock="Right"')
+$hasSkillEllipsis = $hudScript.Contains('TextTrimming="CharacterEllipsis"')
+$hasSkillMaxWidth = $hudScript.Contains('MaxWidth="140"')
+$hasWebBtn = $hudScript.Contains('Name="WebBtn"') -and $hudScript.Contains('Start-Process "http://localhost:3000/"')
+Assert-Test -Scenario "HUD Layout" -TestName "Close utility anchored to right edge via DockPanel" -Condition $hasCloseRightDock
+Assert-Test -Scenario "HUD Layout" -TestName "SkillBadgeText trims with ellipsis on long cloud names" -Condition $hasSkillEllipsis
+Assert-Test -Scenario "HUD Layout" -TestName "SkillBadgeBorder has MaxWidth protection" -Condition $hasSkillMaxWidth
+Assert-Test -Scenario "HUD Layout" -TestName "WebBtn present to launch browser from HUD" -Condition $hasWebBtn
+
+# -----------------------------------------------------------------------------
+# SCENARIO 13: Overflow Scrollers & Responsiveness in index.html
+# -----------------------------------------------------------------------------
+Write-Host "`n--- SCENARIO 13: Overflow & Scroller Guardrails ---" -ForegroundColor Magenta
+$hasSettingsScroll = $indexHtml.Contains("max-height: calc(100vh - 84px)") -and $indexHtml.Contains("overflow-y: auto")
+$hasPanelActionsWrap = $indexHtml.Contains("flex-wrap: wrap") -and $indexHtml.Contains("max-width: 100%")
+$hasCodeScroll = $indexHtml.Contains("overflow-x: auto") -and $indexHtml.Contains(".code-content")
+$hasCloudBadgeEllipsis = $indexHtml.Contains("max-width: 220px") -and $indexHtml.Contains("text-overflow: ellipsis")
+Assert-Test -Scenario "Scroller Guardrails" -TestName "Settings panel has max-height and overflow-y: auto" -Condition $hasSettingsScroll
+Assert-Test -Scenario "Scroller Guardrails" -TestName "Panel actions wrap on narrow screens" -Condition $hasPanelActionsWrap
+Assert-Test -Scenario "Scroller Guardrails" -TestName "Code blocks scroll horizontally on wide queries" -Condition $hasCodeScroll
+Assert-Test -Scenario "Scroller Guardrails" -TestName "Header cloud badge protected against overflow" -Condition $hasCloudBadgeEllipsis
+
+# -----------------------------------------------------------------------------
 # SUMMARY REPORT
 # -----------------------------------------------------------------------------
 Write-Host "`n==========================================================" -ForegroundColor Cyan

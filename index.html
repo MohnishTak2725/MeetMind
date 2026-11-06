@@ -113,6 +113,10 @@
       font-weight: 600;
       padding: 1px 7px;
       border-radius: 8px;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .sf-clouds-arrow { font-size: 10px; color: var(--text-secondary); margin-left: 2px; }
 
@@ -147,10 +151,16 @@
     }
     .sf-popover-reset:hover { color: #FFFFFF; }
     .sf-clouds-list {
-      max-height: 320px;
+      max-height: 340px;
       overflow-y: auto;
+      overflow-x: hidden;
       padding: 6px 8px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(99, 120, 255, 0.4) transparent;
     }
+    .sf-clouds-list::-webkit-scrollbar { width: 5px; }
+    .sf-clouds-list::-webkit-scrollbar-thumb { background: rgba(99, 120, 255, 0.35); border-radius: 99px; }
+    .sf-clouds-list::-webkit-scrollbar-thumb:hover { background: rgba(99, 120, 255, 0.6); }
     .sf-cloud-item {
       display: flex; align-items: flex-start; gap: 10px;
       padding: 7px 10px;
@@ -292,14 +302,23 @@
 
     .settings-panel {
       position: fixed; top: 66px; right: 16px;
-      width: 340px;
+      width: 360px;
+      max-height: calc(100vh - 84px);
+      overflow-y: auto;
+      overflow-x: hidden;
       background: var(--bg-card);
       border: 1px solid var(--border); border-radius: var(--radius);
       padding: 20px; z-index: 100;
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
       display: none;
       animation: slide-down 0.2s ease;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(99, 120, 255, 0.4) transparent;
     }
+    .settings-panel::-webkit-scrollbar { width: 5px; }
+    .settings-panel::-webkit-scrollbar-track { background: transparent; }
+    .settings-panel::-webkit-scrollbar-thumb { background: rgba(99, 120, 255, 0.35); border-radius: 99px; }
+    .settings-panel::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
     .settings-panel.open { display: block; }
     @keyframes slide-down {
       from { opacity: 0; transform: translateY(-8px); }
@@ -587,7 +606,16 @@
     .icon-mic { background: rgba(99, 120, 255, 0.15); }
     .icon-ai  { background: rgba(168, 85, 247, 0.15); }
 
-    .panel-actions { display: flex; gap: 6px; }
+    .panel-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      max-width: 100%;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .panel-actions::-webkit-scrollbar { display: none; }
 
     .btn-sm {
       padding: 5px 10px; border-radius: 6px;
@@ -599,11 +627,18 @@
     .btn-sm.danger:hover { border-color: var(--accent-red); color: var(--accent-red); }
 
     .panel-body {
-      flex: 1; overflow-y: auto; padding: 14px 16px; scroll-behavior: smooth;
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 14px 16px;
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(99, 120, 255, 0.4) transparent;
     }
-    .panel-body::-webkit-scrollbar { width: 4px; }
+    .panel-body::-webkit-scrollbar { width: 6px; }
     .panel-body::-webkit-scrollbar-track { background: transparent; }
-    .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+    .panel-body::-webkit-scrollbar-thumb { background: rgba(99, 120, 255, 0.3); border-radius: 99px; }
+    .panel-body::-webkit-scrollbar-thumb:hover { background: rgba(99, 120, 255, 0.6); }
 
     .mic-control {
       display: flex; align-items: center; gap: 12px;
@@ -765,12 +800,19 @@
       margin: 0;
       padding: 12px;
       overflow-x: auto;
+      overflow-y: hidden;
       font-size: 12.5px;
       line-height: 1.55;
       color: #e2e8f0;
       background: transparent;
       white-space: pre;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(99, 120, 255, 0.4) rgba(0, 0, 0, 0.2);
     }
+    .code-content::-webkit-scrollbar { height: 6px; }
+    .code-content::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.25); border-radius: 4px; }
+    .code-content::-webkit-scrollbar-thumb { background: rgba(99, 120, 255, 0.4); border-radius: 4px; }
+    .code-content::-webkit-scrollbar-thumb:hover { background: rgba(99, 120, 255, 0.7); }
     .code-content code {
       font-family: inherit;
     }
@@ -869,17 +911,39 @@
     .api-prompt-card {
       background: var(--bg-card);
       border: 1px solid var(--border-active); border-radius: var(--radius);
-      padding: 32px; width: 420px;
+      padding: 32px; width: 420px; max-width: 95vw;
+      max-height: 92vh; overflow-y: auto;
       box-shadow: 0 24px 80px rgba(0,0,0,0.6);
       animation: slide-down 0.3s ease;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(99, 120, 255, 0.4) transparent;
     }
+    .api-prompt-card::-webkit-scrollbar { width: 5px; }
+    .api-prompt-card::-webkit-scrollbar-thumb { background: rgba(99, 120, 255, 0.35); border-radius: 99px; }
     .api-prompt-icon { font-size: 40px; margin-bottom: 16px; }
     .api-prompt-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
     .api-prompt-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px; }
     .api-prompt-desc a { color: var(--accent-blue); text-decoration: none; }
     .api-prompt-desc a:hover { text-decoration: underline; }
 
-    * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(99, 120, 255, 0.3) transparent;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 120, 255, 0.25);
+      border-radius: 99px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(99, 120, 255, 0.55);
+    }
   </style>
 </head>
 <body>
