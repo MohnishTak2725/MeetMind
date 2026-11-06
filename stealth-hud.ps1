@@ -124,6 +124,7 @@ $xaml = @"
                     <!-- Right Utility Controls: Anchored to right edge, never clipped or pushed off -->
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Name="WebBtn" Content="Web ↗" Width="52" Height="24" Background="#206378FF" Foreground="#93C5FD" BorderThickness="1" BorderBrush="#406378FF" Margin="0,0,5,0" Cursor="Hand" FontWeight="Bold" FontSize="11" ToolTip="Open MeetMind Web App in Browser (http://localhost:3000)"/>
+                        <Button Name="ClearBtn" Content="Clear" Width="42" Height="24" Background="#20FFFFFF" Foreground="#CBD5E1" BorderThickness="1" BorderBrush="#30FFFFFF" Margin="0,0,5,0" Cursor="Hand" FontWeight="SemiBold" FontSize="11" ToolTip="Clear All Answers &amp; Transcript"/>
                         <ComboBox Name="OpacityCombo" Width="60" Height="24" FontSize="11" Background="#20FFFFFF" Foreground="#FFFFFF" Margin="0,0,5,0" VerticalContentAlignment="Center" ToolTip="HUD Transparency">
                             <ComboBoxItem Content="100%"/>
                             <ComboBoxItem Content="85%" IsSelected="True"/>
@@ -212,6 +213,7 @@ $win.Add_SourceInitialized({
 # Element hooks
 $header = $win.FindName("HeaderBar")
 $webBtn = $win.FindName("WebBtn")
+$clearBtn = $win.FindName("ClearBtn")
 $opacityCombo = $win.FindName("OpacityCombo")
 $fontBtn = $win.FindName("FontBtn")
 $closeBtn = $win.FindName("CloseBtn")
@@ -253,6 +255,17 @@ $header.Add_MouseDown({
 
 # Close & Key shortcuts
 $closeBtn.Add_Click({ $win.Close() })
+
+if ($clearBtn) {
+    $clearBtn.Add_Click({
+        $answersContainer.Children.Clear()
+        $transcriptContainer.Children.Clear()
+        $script:seenCount = 0
+        try {
+            $null = Invoke-RestMethod -Uri "http://localhost:3000/api/clear" -Method POST -TimeoutSec 1 -ErrorAction SilentlyContinue
+        } catch {}
+    })
+}
 
 $win.Add_KeyDown({
     if ($_.Key -eq [System.Windows.Input.Key]::Escape) {
@@ -360,6 +373,11 @@ $feedTimer.Add_Tick({
 
     try {
         $res = Invoke-RestMethod -Uri "http://localhost:3000/api/feed?since=$script:seenCount" -Method GET -TimeoutSec 1 -ErrorAction Stop
+        if ($res.total -lt $script:seenCount) {
+            $script:seenCount = 0
+            $answersContainer.Children.Clear()
+            $transcriptContainer.Children.Clear()
+        }
         if ($res.items -and $res.items.Count -gt 0) {
             foreach ($raw in $res.items) {
                 $script:seenCount++

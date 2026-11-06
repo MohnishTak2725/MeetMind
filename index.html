@@ -1854,6 +1854,7 @@
             <option value="0.45">45%</option>
           </select>
           <button class="hud-btn" id="hudFontBtn" title="Toggle Font Size">A+</button>
+          <button class="hud-btn" id="hudClearBtn" title="Clear All Answers &amp; Transcript">✕ Clear</button>
           <button class="hud-btn" id="hudDockBtn" title="Dock back into main tab">↩ Dock</button>
         </div>
       </div>
@@ -1882,6 +1883,13 @@
     doc.getElementById('hudFontBtn').addEventListener('click', () => {
       isLarge = !isLarge;
       bodyEl.style.fontSize = isLarge ? '14.5px' : '13px';
+    });
+
+    // Clear button
+    doc.getElementById('hudClearBtn')?.addEventListener('click', () => {
+      clearAnswers();
+      clearTranscript();
+      showToast('HUD cleared ✓', 'info');
     });
 
     // Dock button
