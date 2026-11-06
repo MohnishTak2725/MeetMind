@@ -6,6 +6,8 @@
     "default": true,
     "required": true,
     "description": "Apex, SOQL/SOSL, LWC, Triggers, Flows, Governor Limits & Security",
+    "officialDataModels": ["Account", "Contact", "Opportunity", "Case", "User", "Profile", "PermissionSet", "PermissionSetGroup"],
+    "architecturalStandards": "Apex Enterprise Patterns (fflib / TriggerHandler), Bulkification, LDS Caching, Transaction Control, Sharing & Visibility (WITH USER_MODE, stripInaccessible)",
     "phonetics": {
       "so quile": "SOQL",
       "so kill": "SOQL",
@@ -15,9 +17,15 @@
       "trigger handler": "Trigger Handler",
       "flow builder": "Flow Builder",
       "governor limits": "Governor Limits",
-      "lightning web component": "LWC"
+      "lightning web component": "LWC",
+      "custom metadata": "Custom Metadata Types",
+      "queue able": "Queueable Apex",
+      "batch able": "Batchable Apex",
+      "future call": "@future method",
+      "with sharing": "with sharing",
+      "user mode": "WITH USER_MODE"
     },
-    "instructions": "Core Platform: Master of Apex (Triggers, Batch, Queueable), SOQL aggregate queries (GROUP BY, HAVING), LWC reactivity, Flow Builder, and Governor Limit mitigation (bulkification, heap size, SOQL queries per transaction)."
+    "instructions": "Core Platform: Official Salesforce Architecture & Standards.\n- Apex: Master of Trigger frameworks (One trigger per object, TriggerHandler, recursion prevention via static Set<Id>), Asynchronous Apex (@future for simple callouts, Queueable for sObjects/chaining/Finalizers, Batchable for up to 50M records with 5 concurrent jobs, Schedulable).\n- SOQL: Aggregate queries (COUNT, SUM, AVG, GROUP BY, HAVING), relationship queries (parent-to-child subqueries, child-to-parent lookups), custom indexing awareness (standard indexed: Id, Name, OwnerId, CreatedDate, RecordType, Lookups/Master-Detail).\n- LWC: Lightning Web Components (Shadow DOM, @api public props/methods, @wire reactive adapters with LDS client-side caching, Custom Events with bubbles/composed).\n- Governor Limits: 100 SOQL sync / 200 async, 50,000 SOQL rows, 150 DML statements, 10,000 DML rows, 6MB heap sync / 12MB async, 10s CPU sync / 60s async.\n- Security: with sharing (record sharing), WITHOUT sharing, inherited sharing, Security.stripInaccessible(), WITH USER_MODE for FLS and object CRUD enforcement."
   },
   {
     "id": "agentforce",
@@ -26,6 +34,8 @@
     "default": true,
     "required": false,
     "description": "Atlas Reasoning Engine, Topics, Invocable Actions, Trust Layer & Agent API",
+    "officialDataModels": ["Agent", "Topic", "Action", "PromptTemplate", "GenAiPlugin", "GenAiFunction"],
+    "architecturalStandards": "Atlas ReAct Planning Loop (Reason -> Act -> Observe), Semantic Intent Topic Classification, Invocable Apex Action Grounding, Einstein Trust Layer ZDR & PII Masking",
     "phonetics": {
       "agent force": "Agentforce",
       "atlas engine": "Atlas Reasoning Engine",
@@ -33,9 +43,14 @@
       "invocable": "@InvocableMethod",
       "prompt template": "Prompt Template",
       "models api": "Models API",
-      "agent api": "Agent API"
+      "agent api": "Agent API",
+      "trust layer": "Einstein Trust Layer",
+      "react loop": "ReAct Loop",
+      "grounding": "Prompt Grounding",
+      "agent blazer": "Agentblazer",
+      "agentforce dx": "Agentforce DX"
     },
-    "instructions": "Agentforce: Expert in Atlas Reasoning Engine (ReAct loop: Reason, Act, Observe), Topics (classification boundaries), Invocable Apex Actions (@InvocableMethod), Prompt Builder grounding, Einstein Trust Layer data masking, and Agentforce DX."
+    "instructions": "Agentforce: Official Salesforce Winter '27 & Agentblazer Architecture.\n- Atlas Reasoning Engine: Autonomous orchestrator utilizing the ReAct (Reason, Act, Observe) loop. Evaluates conversation history, determines semantic intent, selects candidate Topics, executes Tools/Actions, and iteratively verifies task completion.\n- Topics: Replace monolithic system prompts with modular operational domains defined by crisp natural-language descriptions that Atlas uses as classification boundaries.\n- Actions: Tools executable by Atlas including Apex @InvocableMethod (strongly typed @InvocableVariable parameters, description engineering for tool calling, structured error reporting), Autolaunched Flows, Prompt Templates, and MuleSoft APIs.\n- Einstein Trust Layer: Real-time dynamic PII masking, Zero Data Retention (ZDR) guarantee with external LLMs, toxicity scoring, hallucination mitigation, and audit logging.\n- Grounding & Models: Dynamic grounding in Prompt Builder via Data Cloud Data Graphs, Model Builder BYO-LLM integrations, and programmatic execution via Agent API & Models API."
   },
   {
     "id": "data-cloud",
@@ -44,17 +59,22 @@
     "default": false,
     "required": false,
     "description": "Customer 360, Data Streams, DLO, DMO (__dlm), Identity Resolution & Zero Copy",
+    "officialDataModels": ["Individual__dlm", "ContactPointEmail__dlm", "ContactPointPhone__dlm", "UnifiedIndividual__dlm", "UnifiedLink__dlm", "Account__dlm"],
+    "architecturalStandards": "Cloud Information Model (CIM), DLO (__dll) to DMO (__dlm) mapping, Deterministic/Probabilistic Identity Resolution, Calculated Insights (Spark/Flink), Data Graphs, Zero Copy Iceberg",
     "phonetics": {
       "data cloud": "Data Cloud",
       "dmo": "DMO (__dlm)",
-      "dlo": "DLO",
+      "dlo": "DLO (__dll)",
       "identity resolution": "Identity Resolution",
       "calculated inside": "Calculated Insights",
       "zero copy": "Zero Copy",
       "data stream": "Data Stream",
-      "data graph": "Data Graph"
+      "data graph": "Data Graph",
+      "data space": "Data Space",
+      "iceberg": "Apache Iceberg",
+      "unified individual": "Unified Individual"
     },
-    "instructions": "Data Cloud: Expert in Data Streams (ingestion), Data Lake Objects (DLOs), standard Data Model Objects (DMOs ending in `__dlm`), Unified Individual identity resolution (match/reconciliation rules), Calculated Insights, Vector search/RAG, and Zero Copy federation with Snowflake/BigQuery."
+    "instructions": "Data Cloud: Official Customer 360 & Data 360 Architecture.\n- Ingestion & Storage: Ingestion via Data Streams (CRM, S3, Ingestion API, Web/Mobile SDKs). Staged into Data Lake Objects (DLOs ending in `__dll`), then harmonized into standard Data Model Objects (DMOs ending in `__dlm`) aligned with the Cloud Information Model (CIM).\n- Data Spaces: Logical partitions providing multi-tenant and business unit data isolation.\n- Identity Resolution: Ruleset engine combining Deterministic matching (exact match on normalized email, phone, Party ID) and Probabilistic matching (ML fuzzy match on Name + Address). Reconciliation rules (Last Modified, Most Frequent, Source Priority) create Unified Individual and Unified Link records.\n- Calculated Insights (CI): Complex multidimensional metrics (CLV, RFM, churn risk) executed via Apache Spark (batch) or Apache Flink (streaming).\n- Data Graphs: Materialized hierarchical JSON views pre-joining multiple DMOs for sub-second retrieval by Agentforce and external APIs.\n- Hybrid Search & Vector DB: Unstructured data chunking, embeddings, and Hybrid RAG combining BM25 keyword search + Cosine vector similarity via Reciprocal Rank Fusion (RRF).\n- Zero Copy: Bi-directional storage federation via Apache Iceberg/Delta Lake with Snowflake, Google BigQuery, AWS Redshift, and Databricks without ETL."
   },
   {
     "id": "sales",
@@ -63,15 +83,20 @@
     "default": false,
     "required": false,
     "description": "Leads, Opportunities, Pipeline, Forecasting, Products, CPQ & Territory Mgmt",
+    "officialDataModels": ["Lead", "Opportunity", "Product2", "Pricebook2", "PricebookEntry", "OpportunityLineItem", "OpportunitySplit", "Territory2"],
+    "architecturalStandards": "Lead Conversion Lifecycle, Collaborative Forecasting, Multi-Currency (ACM), Enterprise Territory Management, CPQ Product/Price Rules & Contracting",
     "phonetics": {
       "lead conversion": "Lead Conversion",
       "price book": "Price Book",
       "opportunity split": "Opportunity Splits",
       "forecasting": "Collaborative Forecasting",
       "territory management": "Enterprise Territory Management",
-      "cpq": "Salesforce CPQ"
+      "cpq": "Salesforce CPQ",
+      "pipeline inspection": "Pipeline Inspection",
+      "einstein lead scoring": "Einstein Lead Scoring",
+      "contracting": "CPQ Contracting"
     },
-    "instructions": "Sales Cloud: Expert in Lead qualification and conversion lifecycle, Opportunity & Pipeline stages, Collaborative Forecasting, Products & Price Books, Opportunity Splits, Enterprise Territory Management, and Sales Engagement."
+    "instructions": "Sales Cloud: Official Sales Cloud Architecture & Standards.\n- Lead Lifecycle: Web-to-Lead, Lead Assignment Rules, Lead Scoring, and transactional conversion mapping to Account, Contact, and Opportunity.\n- Opportunity & Pipeline: Stage probability, Forecast Categories (Pipeline, Best Case, Commit, Closed, Omitted), Pipeline Inspection, and Advanced Currency Management (ACM).\n- Products & Pricing: Product2, standard vs custom Pricebook2, PricebookEntry, and OpportunityLineItem scheduling.\n- Splits & Territories: Revenue Splits (100% cap) vs Overlay Splits (>100%), Enterprise Territory Management (Territory2, rule-based account assignments).\n- Salesforce CPQ: Product Bundles (Features, Options), Product Rules (Validation, Selection, Filter), Price Rules (Price Actions, Formulas), Quote Lines, Orders, Contracts, Subscriptions, and Assets."
   },
   {
     "id": "service",
@@ -80,15 +105,20 @@
     "default": false,
     "required": false,
     "description": "Cases, Omni-Channel, Entitlements/Milestones, Knowledge & Service Console",
+    "officialDataModels": ["Case", "CaseMilestone", "Entitlement", "SlaProcess", "KnowledgeArticleVersion", "ServicePresenceStatus", "LiveChatTranscript"],
+    "architecturalStandards": "Case Lifecycle & Assignment, Omni-Channel Queue/Skills Routing, Entitlements & SLA Milestones, Knowledge Versioning & Data Categories, Service Console Tabs",
     "phonetics": {
       "omni channel": "Omni-Channel",
       "entitlement": "Entitlement & Milestones",
       "service console": "Service Console",
       "knowledge article": "Knowledge Article",
       "live agent": "Live Agent / Chat",
-      "escalation rule": "Escalation Rules"
+      "escalation rule": "Escalation Rules",
+      "case milestone": "Case Milestone",
+      "presence status": "Presence Status",
+      "email to case": "Email-to-Case"
     },
-    "instructions": "Service Cloud: Expert in Case lifecycle, Omni-Channel presence & queue/skills-based routing, Entitlements and SLA Milestones, Knowledge base versioning, Service Console workspace tabs, and Macros."
+    "instructions": "Service Cloud: Official Service Cloud Architecture & Standards.\n- Case Management: Web-to-Case, Email-to-Case (routing addresses, threading token vs header-based threading), Case Assignment Rules, Auto-Response Rules, and Escalation Rules.\n- Omni-Channel: Queue-Based vs Skills-Based routing models, routing priority (Most Available vs Least Active), capacity models (Percentage-based vs Tab-based), Presence Statuses, and Omni-Channel Supervisor.\n- Entitlements & Milestones: Support contracts (Entitlement), SLA processes (SlaProcess), Milestones (First Response, Resolution Time), Milestone Triggers (Warning, Violation, Success actions).\n- Salesforce Knowledge: KnowledgeArticleVersion lifecycle (Draft, Published, Archived), Data Categories and Category Groups for article access, channel visibility (Internal, Partner, Customer, Public).\n- Service Console: Multi-tab workspace, subtab navigation, Workspace API (LWC lightning/consoleWorkspaceApi), Utility Bar widgets (Macros, History, CTI softphone)."
   },
   {
     "id": "experience",
@@ -97,15 +127,20 @@
     "default": false,
     "required": false,
     "description": "Digital Experiences (Communities), LWR, Customer/Partner Portals & Security",
+    "officialDataModels": ["Network", "NetworkMember", "User", "Account", "Contact", "CollaborationGroup"],
+    "architecturalStandards": "LWR (Lightning Web Runtime) JAMstack Architecture, Sharing Sets & Share Groups, Customer/Partner Community License Hierarchy, Guest User Security",
     "phonetics": {
       "experience cloud": "Experience Cloud",
       "digital experience": "Digital Experience",
       "lwr": "LWR (Lightning Web Runtime)",
       "experience builder": "Experience Builder",
       "community user": "Experience Cloud User",
-      "guest user": "Guest User Profile"
+      "guest user": "Guest User Profile",
+      "sharing set": "Sharing Set",
+      "share group": "Share Group",
+      "partner portal": "Partner Central"
     },
-    "instructions": "Experience Cloud: Expert in Digital Experiences (Communities), Experience Builder layouts, LWR (Lightning Web Runtime) high-performance sites, Customer/Partner Portal user licenses, external sharing rules, and Guest User security policies."
+    "instructions": "Experience Cloud: Official Experience Cloud & Portal Architecture.\n- Frameworks: Lightning Web Runtime (LWR) - modern, high-performance, edge-rendered JAMstack architecture using LWC without Aura overhead. Aura/Customer Service templates for classic community requirements.\n- Licenses: Customer Community (high-volume, no role hierarchy, relies on Sharing Sets), Customer Community Plus (supports roles, standard sharing rules, reports/dashboards), Partner Community (adds Leads, Opportunities, Deal Registration).\n- Security & Sharing: Guest User Security Policy (strictly private OWD, no edit/delete, no queue membership, uses Guest User Sharing Rules), Sharing Sets (grants portal users access by matching Account/Contact lookups), and Share Groups (grants internal users access to records owned by high-volume portal users)."
   },
   {
     "id": "fsl",
@@ -114,6 +149,8 @@
     "default": false,
     "required": false,
     "description": "Work Orders, Service Appointments, Dispatcher Console, Scheduling & Mobile",
+    "officialDataModels": ["WorkOrder", "WorkOrderLineItem", "ServiceAppointment", "ServiceResource", "ServiceTerritory", "OperatingHours", "TimeSlot", "AssignedResource"],
+    "architecturalStandards": "Work Order Lifecycle, Dispatcher Console Gantt View, Dynamic Scheduling Engine (Work Rules + Service Objectives = Scheduling Policy), Offline Mobile Briefcase",
     "phonetics": {
       "field service": "Field Service (FSL)",
       "service appointment": "Service Appointment",
@@ -121,9 +158,13 @@
       "dispatcher console": "Dispatcher Console",
       "service resource": "Service Resource",
       "service territory": "Service Territory",
-      "operating hours": "Operating Hours"
+      "operating hours": "Operating Hours",
+      "scheduling policy": "Scheduling Policy",
+      "work rule": "Work Rule",
+      "service objective": "Service Objective",
+      "gantt": "Dispatcher Gantt"
     },
-    "instructions": "Field Service (FSL / SFS): Expert in Work Orders, Work Order Line Items, Service Appointments, Service Territories, Operating Hours, Service Resources (Skills/Absences), Dispatcher Console Gantt view, Dynamic Scheduling & Optimization policies, and Offline Mobile flows."
+    "instructions": "Field Service (FSL / SFS): Official Field Service Architecture & Standards.\n- Core Objects: WorkOrder, WorkOrderLineItem, ServiceAppointment (duration, scheduled/actual start/end, status transitions), ServiceResource (technician/crew linked to User, skills, absences), ServiceTerritory, OperatingHours & TimeSlots.\n- Dispatcher Console: Gantt view, appointment status indicators, rule violation flags, multi-day scheduling, and manual drag-and-drop dispatching.\n- Scheduling & Optimization Engine: Scheduling Policies composed of Work Rules (hard constraints: Match Skills, Match Territory, Time Windows, Resource Availability) and Service Objectives (soft weighted constraints: ASAP, Minimize Travel, Preferred Resource). Global, In-Day, and Resource Schedule Optimization (RSO).\n- Field Service Mobile: Offline-first architecture, Prime sync engine, Briefcase Builder data filtering, and offline LWC Mobile Flows."
   },
   {
     "id": "omnistudio",
@@ -132,6 +173,8 @@
     "default": false,
     "required": false,
     "description": "OmniScripts, FlexCards, Data Mappers (DataRaptor) & Integration Procedures",
+    "officialDataModels": ["OmniScript", "OmniUiCard", "OmniDataTransform", "OmniProcess", "CalculationProcedure"],
+    "architecturalStandards": "Guided User Interactions (OmniScript), Micro-UIs (FlexCards), Data Mappers (Extract, Turbo, Load, Transform), Server-side Orchestration (Integration Procedures)",
     "phonetics": {
       "omni studio": "OmniStudio",
       "omni script": "OmniScript",
@@ -139,9 +182,10 @@
       "flex card": "FlexCard",
       "integration procedure": "Integration Procedure (IP)",
       "calculation matrix": "Calculation Matrix",
-      "vip": "Vlocity / OmniStudio Integration Procedure"
+      "vip": "Vlocity / OmniStudio Integration Procedure",
+      "turbo extract": "Data Mapper Turbo Extract"
     },
-    "instructions": "OmniStudio: Expert in guided user flows (OmniScripts), contextual micro-UIs (FlexCards), backend data transformations (Data Mappers / DataRaptors: Extract, Load, Transform, Turbo), server-side orchestration (Integration Procedures / IPs with caching), and Calculation Matrices/Procedures."
+    "instructions": "OmniStudio: Official OmniStudio Architecture & Best Practices.\n- OmniScript: Guided UI step-by-step flows, formula evaluation, conditional element display, multi-language support, custom LWC override capabilities.\n- FlexCard: Contextual modular cards, event-driven architecture (PubSub, Custom Events), conditional states, flyouts, and responsive grid layouts.\n- Data Mappers (formerly DataRaptor): Extract (queries multi-object relational data into JSON), Turbo Extract (high-performance single-object query without transforms), Load (upserts JSON payloads into multiple Salesforce objects resolving foreign keys), and Transform (restructures in-memory JSON without DB queries).\n- Integration Procedures (IP): Server-side orchestration engine executing multiple Data Mappers, HTTP actions, and Apex in a single server trip. Implements Session Cache, Org Cache, execution chaining, and structured error handling."
   },
   {
     "id": "marketing",
@@ -150,6 +194,8 @@
     "default": false,
     "required": false,
     "description": "Journey Builder, Automation Studio, Data Extensions, AMPscript & Contact Builder",
+    "officialDataModels": ["DataExtension", "Subscriber", "Contact", "Journey", "Automation", "PublicationList"],
+    "architecturalStandards": "Contact Builder Relational Data Model (Data Designer), Event-driven Journeys, Automation Studio ETL (SQL Activities), AMPscript / SSJS Personalization",
     "phonetics": {
       "journey builder": "Journey Builder",
       "data extension": "Data Extension",
@@ -157,8 +203,10 @@
       "automation studio": "Automation Studio",
       "contact builder": "Contact Builder",
       "content builder": "Content Builder",
-      "ssjs": "Server-Side JavaScript (SSJS)"
+      "ssjs": "Server-Side JavaScript (SSJS)",
+      "marketing cloud connect": "Marketing Cloud Connect",
+      "subscriber key": "Subscriber Key"
     },
-    "instructions": "Marketing Cloud (SFMC): Expert in multi-channel customer journeys (Journey Builder), batch data processing (Automation Studio SQL queries), data architecture (Data Extensions, Contact Builder Data Designer), dynamic email rendering (AMPscript, SSJS), and Marketing Cloud Connect sync."
+    "instructions": "Marketing Cloud (SFMC): Official Marketing Cloud Architecture & Standards.\n- Data Architecture: Standard, Filtered, and Sendable Data Extensions, All Subscribers list, Subscriber Key primary identifier, Contact Builder Data Designer (1:1, 1:N, N:N cardinality).\n- Journey Builder: Real-time, event-triggered customer journeys. Entry Sources (Data Extension, API Event, Salesforce Data Event via MC Connect, CloudPages Form), Decision Splits, Engagement Splits, Wait Activities, and Exit Criteria.\n- Automation Studio: Scheduled multi-step batch processing engine. Activities include SQL Query Activities (T-SQL queries), Import File, File Transfer, Data Extract, and Send Email.\n- Scripting & Personalization: AMPscript (server-side language for emails, landing pages, SMS using Lookup(), LookupRows(), v(), RowCount()), Server-Side JavaScript (SSJS for complex array handling and API calls), and CloudPages.\n- Marketing Cloud Connect: Syncs CRM Contacts, Leads, Accounts, and custom objects into Synchronized Data Extensions via the Streaming API."
   }
 ]
