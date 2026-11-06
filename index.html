@@ -1197,13 +1197,15 @@
   // Map legacy / invalid model names to current ultra-fast equivalents
   const MODEL_MIGRATION = {
     'gemini-3.8-flash': 'gemini-2.0-flash',
-    'gemini-3.8-pro':   'gemini-2.5-pro',
+    'gemini-3.8-pro':   'gemini-1.5-pro',
     'gemini-3.5-flash': 'gemini-2.0-flash',
+    'gemini-2.5-flash': 'gemini-2.0-flash',
+    'gemini-2.5-pro':   'gemini-1.5-pro',
     'gemini-2.0-flash': 'gemini-2.0-flash',
     'gemini-1.5-flash': 'gemini-1.5-flash',
   };
 
-  let dynamicFallbackModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-2.5-pro'];
+  let dynamicFallbackModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
 
   // Multi-Cloud Salesforce Skills Architecture
   let availableSalesforceClouds = [];
@@ -2726,26 +2728,30 @@
       const recentCtx = transcriptSegments.slice(-6).map(s => s.text).join(' ');
       const ctxLine = sessionContext ? '\nCandidate Profile / Context: ' + sessionContext : '';
 
-      const sysRule = "You are an elite Salesforce Principal Architect & Technical Interview Copilot preparing spoken answers for a candidate in a live interview.\n" +
+      const sysRule = "You are an elite Salesforce Principal Architect & Technical Interview Copilot preparing articulate spoken answers for a candidate in a live technical interview.\n" +
         "Active Clouds / Specializations: " + activeCloudNames + "\n\n" +
-        "Cloud Specific Architectures:\n" + cloudInstructions.join('\n') + "\n\n" +
-        "Strict Spoken Answer Guidelines:\n" +
-        "1. Candidate Spoken Tone: Write answers as articulate, confident speech that an interviewee can read out loud to the interviewer with high authority.\n" +
-        "2. For Conceptual / Architectural Questions (e.g. 'What is Salesforce?', 'Explain OmniStudio / DataRaptors', 'Explain FSL Dispatcher Console', 'What are Governor Limits?', 'What is Data Cloud?'):\n" +
-        "   - Provide a 2 to 3 sentence structured spoken explanation.\n" +
-        "   - State the definition, core architecture/objects, and practical business value.\n" +
-        "   - NEVER output fragmented comma lists like ':Core platform, Data Cloud, Agent'.\n" +
+        "Cloud Specific Architectures & Data Models:\n" + cloudInstructions.join('\n') + "\n\n" +
+        "Strict Answer Guidelines:\n" +
+        "1. Candidate Spoken Tone: Speak directly as the candidate with high authority, confidence, and polished phrasing.\n" +
+        "2. For Conceptual / Architectural Questions (e.g. 'What is Salesforce?', 'Explain OmniStudio', 'Explain FSL', 'What are Governor Limits?', 'What is Data Cloud?', 'What is Agentforce?'):\n" +
+        "   - Provide a comprehensive, 4 to 5 lines of detailed technical description that covers:\n" +
+        "     • Line 1 (Core Definition): Define what it is in enterprise architecture terms (e.g. AI-powered metadata-driven cloud platform).\n" +
+        "     • Line 2 (Underlying Architecture): Multi-tenant architecture, unified relational database (standard & custom objects), and execution framework.\n" +
+        "     • Line 3 (Core Capabilities & Tech Stack): Apex, LWC, Flows, Data Cloud harmonization, and Agentforce autonomous reasoning (Atlas ReAct engine).\n" +
+        "     • Line 4 (Governance & Security): Granular role-based sharing model (OWD, FLS, sharing rules) and strict governor limits ensuring scalability.\n" +
+        "     • Line 5 (Business & Enterprise Value): Delivering complete Customer 360 lifecycle automation, hyper-scalability, and zero-copy data integration.\n" +
+        "   - ALWAYS output complete, well-formed sentences. NEVER truncate mid-sentence and NEVER output fragmented comma lists.\n" +
         "3. For Coding / Query Tasks (e.g. SOQL, SOSL, Apex, LWC, IP/DataRaptor, AMPscript):\n" +
         "   - Output the exact production-ready code or query snippet inside standard markdown code blocks immediately.\n" +
-        "   - Follow with 1 spoken sentence explaining the logic, indexing, or governor limit consideration.";
+        "   - Follow with 1 to 2 spoken sentences explaining the logic, indexing, bulkification, or governor limit consideration.";
 
       const prompt = sysRule +
         (ctxLine ? '\nContext: ' + ctxLine : '') +
         (recentCtx ? '\nRecent conversation snippet: "' + recentCtx + '"' : '') +
         '\n\nInterview Question Asked: "' + cleanQ + '"' +
-        '\nProvide the direct, articulate spoken answer for the candidate:';
+        '\nProvide the direct, complete 4-5 line detailed spoken answer for the candidate without wrapping quotes:';
 
-      const answer = await callGeminiWithFallback(prompt, loadId, 280);
+      const answer = await callGeminiWithFallback(prompt, loadId, 1200);
       document.getElementById(loadId)?.remove();
       addAnswerCard(question, answer);
     } catch (err) {
@@ -2784,7 +2790,7 @@
     return RETRYABLE_PHRASES.some(p => lower.includes(p));
   }
 
-  async function callGeminiWithFallback(prompt, loadId, maxTokens = 280) {
+  async function callGeminiWithFallback(prompt, loadId, maxTokens = 1200) {
     // Ensure clean model selection
     let activeModel = selectedModel;
     if (MODEL_MIGRATION[activeModel]) {
@@ -2826,7 +2832,7 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.2, maxOutputTokens: maxTokens || 280 }
+                generationConfig: { temperature: 0.25, maxOutputTokens: maxTokens || 1200 }
               })
             }
           );
@@ -2836,6 +2842,12 @@
             if (i > 0) showToast('Answered via ' + model + ' ✓', 'success');
             let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
             let cleanText = rawText.replace(/^[:\s-]+/, '').trim();
+            // Clean wrapping quotes or stray leading quotation marks:
+            if (cleanText.startsWith('"') && cleanText.endsWith('"') && cleanText.length > 2) {
+              cleanText = cleanText.slice(1, -1).trim();
+            } else if (cleanText.startsWith('"') && !cleanText.slice(1).includes('"')) {
+              cleanText = cleanText.slice(1).trim();
+            }
             return cleanText || 'No answer generated.';
           }
 
