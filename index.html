@@ -84,6 +84,23 @@
     .logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
     .logo-text span { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
+    .skill-picker-wrap {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(99, 120, 255, 0.08);
+      border: 1px solid rgba(99, 120, 255, 0.25);
+      border-radius: 99px;
+      padding: 4px 10px 4px 10px;
+      transition: var(--transition);
+    }
+    .skill-picker-wrap:hover { border-color: var(--accent-blue); }
+    .skill-picker-label {
+      font-size: 11px; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .skill-select {
+      background: transparent; border: none; color: #FFFFFF; font-size: 12px; font-weight: 600; cursor: pointer; outline: none;
+    }
+    .skill-select option { background: #121829; color: #FFFFFF; font-weight: 500; }
+
     .header-right { display: flex; align-items: center; gap: 10px; }
 
     .status-badge {
@@ -823,6 +840,12 @@
       <div class="logo-icon">🧠</div>
       <div class="logo-text">Meet<span>Mind</span></div>
     </div>
+    <div class="skill-picker-wrap" title="Active Interview Skill (Loaded from /skills directory)">
+      <span class="skill-picker-label">⚡ Skill:</span>
+      <select class="skill-select" id="skillSelect" onchange="changeSkill(this.value)">
+        <option value="salesforce">⚡ Salesforce &amp; Agentforce</option>
+      </select>
+    </div>
     <div class="header-right">
       <button class="btn-pip" id="pipBtn" title="Pop out Always-On-Top floating HUD over Teams/Zoom/Meet" onclick="togglePipHUD()">
         📌 Pop Out HUD (Always On Top)
@@ -1080,7 +1103,61 @@
 
   let dynamicFallbackModels = ['gemini-3.8-flash', 'gemini-2.5-pro', 'gemini-3.8-pro'];
 
+  // Modular Interview Skills loaded from /skills directory
+  let loadedSkills = [];
+  let currentSkill = null;
+
+  async function loadSkills() {
+    try {
+      const res = await fetch('/api/skills');
+      if (res.ok) {
+        const list = await res.json();
+        if (Array.isArray(list) && list.length > 0) {
+          loadedSkills = list;
+          const select = document.getElementById('skillSelect');
+          if (select) {
+            select.innerHTML = '';
+            loadedSkills.forEach(s => {
+              const opt = document.createElement('option');
+              opt.value = s.id;
+              opt.textContent = (s.icon ? s.icon + ' ' : '') + s.name;
+              select.appendChild(opt);
+            });
+            const saved = localStorage.getItem('meetmind_active_skill') || 'salesforce';
+            const matched = loadedSkills.find(s => s.id === saved) || loadedSkills[0];
+            select.value = matched.id;
+            currentSkill = matched;
+            syncActiveSkillToServer(matched.id);
+          }
+        }
+      }
+    } catch (e) {
+      console.log('Skills loaded in default mode');
+    }
+  }
+
+  function changeSkill(skillId) {
+    const found = loadedSkills.find(s => s.id === skillId);
+    if (found) {
+      currentSkill = found;
+      localStorage.setItem('meetmind_active_skill', skillId);
+      syncActiveSkillToServer(skillId);
+      showToast('Active Skill: ' + found.name + ' ⚡', 'info');
+    }
+  }
+
+  function syncActiveSkillToServer(skillId) {
+    if (window.location.protocol !== 'file:') {
+      fetch('/api/skills/active', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skillId })
+      }).catch(() => {});
+    }
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
+    loadSkills();
     // Check if API key is provided via query parameter (e.g. from file:// migration link)
     const urlParams = new URLSearchParams(window.location.search);
     const keyParam = urlParams.get('key');
@@ -2431,18 +2508,30 @@
     scrollToBottom('answersBody');
 
     try {
-      const recentCtx = transcriptSegments.slice(-8).map(s => s.text).join(' ');
-      const ctxLine = sessionContext ? '\nMeeting context: ' + sessionContext : '\nMeeting context: Technical Interview (Salesforce, Software Engineering, Architecture)';
-      const prompt = 'You are an intelligent, concise technical meeting assistant.' + ctxLine +
-        '\nRecent transcript: "' + recentCtx + '"' +
-        '\nQuestion/Task asked in the meeting: "' + question + '"' +
-        '\nInstructions:' +
-        '\n1. The speech-to-text transcript may contain phonetic misspellings of technical jargon (e.g. "circular" / "so quile" -> SOQL, "social" -> SOSL, "epic" -> Apex, "graphic ul" -> GraphQL, "no sequel" -> NoSQL). Contextually infer the intended technical term.' +
-        '\n2. If the user asks for code, a query (e.g. SOQL, SQL, Apex, JavaScript, Python), or syntax: Provide the complete, exact, production-ready code or query snippet inside standard markdown code blocks (e.g. ```soql ... ```), followed by a concise 1-2 sentence explanation.' +
-        '\n3. Always output complete code. Never truncate or leave code blocks unfinished.' +
-        '\n4. Otherwise: Give a clear, accurate, helpful answer in 2-4 sentences. Be direct, professional, and confident.';
+      // Pre-process question with active skill phonetic dictionary
+      let cleanQ = question;
+      if (currentSkill && currentSkill.phonetics) {
+        for (const [misspelled, correct] of Object.entries(currentSkill.phonetics)) {
+          const regex = new RegExp('\\b' + misspelled + '\\b', 'gi');
+          cleanQ = cleanQ.replace(regex, correct);
+        }
+      }
 
-      const answer = await callGeminiWithFallback(prompt, loadId);
+      const recentCtx = transcriptSegments.slice(-6).map(s => s.text).join(' ');
+      const ctxLine = sessionContext ? '\nAdditional context: ' + sessionContext : '';
+      
+      const sysRule = (currentSkill && currentSkill.systemPrompt)
+        ? currentSkill.systemPrompt
+        : 'You are an intelligent, concise technical meeting assistant.\n1. Give exact code or 2-3 direct bullet points.\n2. Keep total response under 80 words.';
+
+      const maxToks = (currentSkill && currentSkill.maxTokens) ? currentSkill.maxTokens : 250;
+
+      const prompt = sysRule + ctxLine +
+        '\n\nRecent transcript: "' + recentCtx + '"' +
+        '\nQuestion/Task: "' + cleanQ + '"' +
+        '\nAnswer directly with production code/query or punchy bullets:';
+
+      const answer = await callGeminiWithFallback(prompt, loadId, maxToks);
       document.getElementById(loadId)?.remove();
       addAnswerCard(question, answer);
     } catch (err) {
@@ -2481,7 +2570,7 @@
     return RETRYABLE_PHRASES.some(p => lower.includes(p));
   }
 
-  async function callGeminiWithFallback(prompt, loadId) {
+  async function callGeminiWithFallback(prompt, loadId, maxTokens = 250) {
     // Ensure clean model selection
     let activeModel = selectedModel;
     if (MODEL_MIGRATION[activeModel]) {
@@ -2534,7 +2623,7 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.3, maxOutputTokens: 2048 }
+                generationConfig: { temperature: 0.2, maxOutputTokens: maxTokens || 250 }
               })
             }
           );

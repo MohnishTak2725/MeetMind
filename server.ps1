@@ -22,6 +22,7 @@ $dir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 # In-memory stores for Native Stealth HUD bridge
 $feedItems = [System.Collections.ArrayList]::Synchronized([System.Collections.ArrayList]::new())
 $askQueue = [System.Collections.ArrayList]::Synchronized([System.Collections.ArrayList]::new())
+$activeSkillId = "salesforce"
 
 while ($listener.IsListening) {
     try {
@@ -30,6 +31,72 @@ while ($listener.IsListening) {
         $response = $context.Response
 
         $urlPath = $request.Url.LocalPath
+
+        # API: /api/skills (GET available skills from skills directory)
+        if ($urlPath -eq "/api/skills") {
+            $response.ContentType = "application/json; charset=utf-8"
+            $response.Headers.Add("Access-Control-Allow-Origin", "*")
+            $response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS")
+            $response.Headers.Add("Access-Control-Allow-Headers", "Content-Type")
+
+            if ($request.HttpMethod -eq "OPTIONS") {
+                $response.StatusCode = 200
+                $response.Close()
+                continue
+            }
+
+            $skillsDir = Join-Path $dir "skills"
+            $skillsList = @()
+            if (Test-Path $skillsDir) {
+                Get-ChildItem -Path $skillsDir -Filter "*.json" | ForEach-Object {
+                    try {
+                        $rawText = [System.IO.File]::ReadAllText($_.FullName, [System.Text.Encoding]::UTF8)
+                        $skillsList += ($rawText | ConvertFrom-Json)
+                    } catch {}
+                }
+            }
+            $json = ($skillsList | ConvertTo-Json -Depth 6 -Compress)
+            if (-not $json) { $json = "[]" }
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+            $response.OutputStream.Write($bytes, 0, $bytes.Length)
+            $response.Close()
+            continue
+        }
+
+        # API: /api/skills/active (GET or POST active skill)
+        if ($urlPath -eq "/api/skills/active") {
+            $response.ContentType = "application/json; charset=utf-8"
+            $response.Headers.Add("Access-Control-Allow-Origin", "*")
+            $response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            $response.Headers.Add("Access-Control-Allow-Headers", "Content-Type")
+
+            if ($request.HttpMethod -eq "OPTIONS") {
+                $response.StatusCode = 200
+                $response.Close()
+                continue
+            }
+
+            if ($request.HttpMethod -eq "POST") {
+                $reader = New-Object System.IO.StreamReader($request.InputStream, $request.ContentEncoding)
+                $body = $reader.ReadToEnd()
+                $reader.Close()
+                if ($body) {
+                    try {
+                        $data = $body | ConvertFrom-Json
+                        if ($data.skillId) { $activeSkillId = $data.skillId }
+                    } catch {}
+                }
+                $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"status":"ok","activeSkillId":"' + $activeSkillId + '"}')
+                $response.OutputStream.Write($bytes, 0, $bytes.Length)
+                $response.Close()
+                continue
+            } else {
+                $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"activeSkillId":"' + $activeSkillId + '"}')
+                $response.OutputStream.Write($bytes, 0, $bytes.Length)
+                $response.Close()
+                continue
+            }
+        }
 
         # API: /api/feed (GET to read feed, POST to publish items)
         if ($urlPath -eq "/api/feed") {

@@ -129,8 +129,11 @@ $xaml = @"
 
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="MeetMind HUD" Foreground="#FFFFFF" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
-                        <Border Background="#2010B981" CornerRadius="10" Padding="6,2" Margin="8,0,0,0" BorderBrush="#4010B981" BorderThickness="1" VerticalAlignment="Center">
-                            <TextBlock Text="[Shielded - Invisible]" Foreground="#34D399" FontSize="10" FontWeight="SemiBold"/>
+                        <Border Background="#2010B981" CornerRadius="10" Padding="5,2" Margin="5,0,0,0" BorderBrush="#4010B981" BorderThickness="1" VerticalAlignment="Center">
+                            <TextBlock Text="[Shielded]" Foreground="#34D399" FontSize="10" FontWeight="SemiBold"/>
+                        </Border>
+                        <Border Name="SkillBadgeBorder" Background="#206378FF" CornerRadius="10" Padding="5,2" Margin="5,0,0,0" BorderBrush="#406378FF" BorderThickness="1" VerticalAlignment="Center">
+                            <TextBlock Name="SkillBadgeText" Text="⚡ Salesforce" Foreground="#93C5FD" FontSize="10" FontWeight="SemiBold"/>
                         </Border>
                     </StackPanel>
 
@@ -222,6 +225,7 @@ $answersContainer = $win.FindName("AnswersContainer")
 $transcriptContainer = $win.FindName("TranscriptContainer")
 $askInput = $win.FindName("AskInput")
 $askBtn = $win.FindName("AskBtn")
+$skillBadgeText = $win.FindName("SkillBadgeText")
 
 # Drag move
 $header.Add_MouseDown({
@@ -310,6 +314,7 @@ $askInput.Add_KeyDown({
 
 # Live Feed Polling Timer
 $seenCount = 0
+$tickCount = 0
 $feedTimer = New-Object System.Windows.Threading.DispatcherTimer
 $feedTimer.Interval = [TimeSpan]::FromMilliseconds(500)
 $feedTimer.Add_Tick({
@@ -318,6 +323,26 @@ $feedTimer.Add_Tick({
             [NativeAffinity]::SyncToCurrentDesktop($script:hudHwnd)
         }
     } catch {}
+
+    # Sync active skill every 2.5s (every 5 ticks)
+    $script:tickCount = ($script:tickCount + 1) % 5
+    if ($script:tickCount -eq 0 -and $skillBadgeText) {
+        try {
+            $sRes = Invoke-RestMethod -Uri "http://localhost:3000/api/skills/active" -Method GET -TimeoutSec 1 -ErrorAction SilentlyContinue
+            if ($sRes -and $sRes.activeSkillId) {
+                $lbl = switch ($sRes.activeSkillId) {
+                    "salesforce"     { "⚡ Salesforce" }
+                    "system-design"  { "🏗️ System Design" }
+                    "fullstack"      { "💻 Full-Stack" }
+                    "general"        { "🎯 General" }
+                    default          { "⚡ " + $sRes.activeSkillId }
+                }
+                if ($skillBadgeText.Text -ne $lbl) {
+                    $skillBadgeText.Text = $lbl
+                }
+            }
+        } catch {}
+    }
 
     try {
         $res = Invoke-RestMethod -Uri "http://localhost:3000/api/feed?since=$script:seenCount" -Method GET -TimeoutSec 1 -ErrorAction Stop

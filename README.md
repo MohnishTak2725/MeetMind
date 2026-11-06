@@ -37,6 +37,12 @@ MeetMind/
 ├── 🚀 stealth-mode.bat       # Main Windows launcher (Runs silently with 0 console windows)
 ├── 🛑 stop.bat               # Main Windows shutdown button (Silently kills all processes)
 │
+├── 📁 skills/                # Modular Interview Domain Skills (Agent-managed)
+│   ├── ⚡ salesforce.json    # Salesforce, Apex, SOQL, Agentforce & Data Cloud
+│   ├── 🏗️ system-design.json # Scalable Systems, Microservices, Caching & Sharding
+│   ├── 💻 fullstack.json     # Data Structures & Algorithms, Python, JS/TS, SQL
+│   └── 🎯 general.json       # General Software Engineering & Behavioral
+│
 ├── 🌐 index.html             # Web Application (Audio capture, STT, and Gemini AI engine)
 ├── ⚙️ server.ps1             # Local API Server & IPC bridge (http://localhost:3000)
 ├── 🛡️ stealth-hud.ps1        # Native WPF Stealth HUD (Invisible on screen share & taskbar)
